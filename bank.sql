@@ -1,13 +1,12 @@
 SELECT VERSION(), USER(), DATABASE(), NOW();
 
-SELECT DISTINCT dept_id FROM employee;
+SELECT DISTINCT cust_id FROM account;
 
 SELECT emp_id, 'ACTIVE', emp_id * 2, UPPER(fname) FROM employee;
 
 -- псевдонимы
 SELECT emp_id, 'ACTIVE' status, emp_id * 3.14159 empid_x_pi, 
-	UPPER(lname) last_name_upper FROM employee;
-
+    UPPER(lname) last_name_upper FROM employee;
 
 -- подзапросы
 SELECT t.open_date 
@@ -16,39 +15,42 @@ FROM (SELECT * FROM account WHERE avail_balance > 5000) t;
 SELECT t.emp_id, t.fname, t.lname
 FROM (SELECT emp_id, fname, lname, start_date, title FROM employee) t;
 
-
 -- Представления (виртуальные таблицы)
 CREATE VIEW employee_vw AS SELECT emp_id, fname, lname,
-	YEAR(start_date) start_year FROM employee;	
+    YEAR(start_date) start_year FROM employee;
 SELECT emp_id, start_year FROM employee_vw;
-
+DROP VIEW employee_vw;
 
 
 
 
 
 /*-------------------------------------------------------------------------
-							     ФИЛЬТРАЦИЯ
+                                 ФИЛЬТРАЦИЯ
 --------------------------------------------------------------------------- */
 SELECT emp_id, fname, lname, start_date, title FROM employee
 WHERE title = 'Head Teller' AND start_date > '2002-01-01';
 
 SELECT emp_id, fname, lname, start_date, title FROM employee
 WHERE (title = 'Head Teller' AND start_date > '2002-01-01') OR
-	  (title = 'Teller' AND start_date > '2003-01-01');
+    (title = 'Teller' AND start_date > '2003-01-01');
 
+-- поиск по длине имени
 SELECT emp_id, fname, lname FROM employee WHERE LENGTH(lname) = 5;
-
-
--- сортировка по последним трем разрядам id
-SELECT cust_id, cust_type_cd, city, state, fed_id FROM customer
-ORDER BY RIGHT(fed_id, 3);
-
+-- поиск по первой букве
+SELECT emp_id, fname, lname FROM employee WHERE LEFT(lname, 1) = 'T';
 
 -- ORDER BY
 SELECT emp_id, title, start_date, fname, lname FROM employee ORDER BY 2, 5;
 SELECT emp_id, title, start_date, fname, lname FROM employee ORDER BY title, lname;
+SELECT * FROM account ORDER BY open_date DESC;
+-- сортировка по последним трем разрядам fed_id
+SELECT cust_id, cust_type_cd, city, state, fed_id FROM customer
+ORDER BY RIGHT(fed_id, 3);
 
+-- LIMIT
+SELECT * FROM account LIMIT 5;  --count
+SELECT * FROM account LIMIT 8, 3; --offset, count
 
 -- BETWEEN
 SELECT account_id, product_cd, cust_id, avail_balance FROM account
@@ -56,35 +58,31 @@ WHERE avail_balance BETWEEN 3000 AND 5000;
 
 SELECT * FROM account WHERE open_date BETWEEN '2002-01-01' AND '2002-12-31';
 
-
 -- IN
 SELECT account_id, product_cd, cust_id, avail_balance FROM account
 WHERE product_cd IN ('CHK','SAV','CD','MM');
-
+-- в подзапросе должен быть 1 столбец
 SELECT account_id, product_cd, cust_id, avail_balance FROM account
 WHERE product_cd IN (SELECT product_cd FROM product WHERE product_type_cd = 'ACCOUNT');
-
 
 -- NOT IN
 SELECT account_id, product_cd, cust_id, avail_balance FROM account
 WHERE product_cd NOT IN ('CHK','SAV','CD','MM');
 
-
--- поиск по певой букве
-SELECT emp_id, fname, lname FROM employee
-WHERE LEFT(lname, 1) = 'T';
-
-
 -- LIKE (поиск по маске)
-SELECT emp_id, fname, lname FROM employee WHERE lname LIKE 'F%' OR lname LIKE 'G%';
+SELECT emp_id, fname, lname FROM employee 
+
+WHERE lname LIKE 'F%' OR lname LIKE 'G%';
 SELECT lname FROM employee WHERE lname LIKE '_a%e%';
 
+SELECT cust_id, fed_id FROM customer
+WHERE fed_id LIKE '___-__-____';
 
--- REGEXP (поиск по регулярному выражению)
+-- REGEXP (поиск по регулярному выражению) (в MySQL POSIX)
 SELECT emp_id, fname, lname FROM employee WHERE lname REGEXP '^[FG]';
-SELECT emp_id, fname, lname FROM employee WHERE lname REGEXP 'ing$' 
-	OR LOWER(lname) REGEXP '^p.+an$';
 
+SELECT emp_id, fname, lname FROM employee 
+WHERE lname REGEXP 'ing$' OR LOWER(lname) REGEXP '^p.+an$';
 
 --NULL
 SELECT * FROM employee WHERE superior_emp_id IS NULL;
@@ -94,9 +92,8 @@ SELECT * FROM employee WHERE superior_emp_id IS NOT NULL;
 
 
 
-
 /*-------------------------------------------------------------------------
-						  СОЕДИНЕНИЕ JOIN
+                          СОЕДИНЕНИЕ JOIN
 --------------------------------------------------------------------------- */
 -- CROSS JOIN (декартово произведение)
 SELECT e.fname, e.lname, d.name FROM employee e JOIN department d;
@@ -117,7 +114,6 @@ SELECT e.fname, e.lname, d.name
 FROM employee e 
 INNER JOIN department d USING (dept_id);
 
-
 -- соединение 3 таблиц
 SELECT e.fname, e.lname, d.name department, b.name branch, b.city 
 FROM employee e
@@ -134,8 +130,8 @@ FROM account a
 INNER JOIN employee e ON a.open_emp_id = e.emp_id
 INNER JOIN branch b ON e.assigned_branch_id = b.branch_id
 WHERE e.start_date <= '2003-01-01'
-	AND (e.title = 'Teller' OR e.title = 'Head Teller')
-	AND b.name = 'Woburn Branch';
+    AND (e.title = 'Teller' OR e.title = 'Head Teller')
+    AND b.name = 'Woburn Branch';
 
 
 -- запрос, возвращающий работника открывшего счет, ID счета и идентификационный номер
@@ -153,13 +149,13 @@ WHERE c.cust_type_cd = 'B';
 SELECT a.account_id, a.cust_id, a.open_date, a.product_cd
 FROM account a 
 INNER JOIN (SELECT emp_id, assigned_branch_id
-			FROM employee
-			WHERE start_date <= '2003-01-01'
-				AND (title = 'Teller' OR title = 'Head Teller')) e
+            FROM employee
+            WHERE start_date <= '2003-01-01'
+                AND (title = 'Teller' OR title = 'Head Teller')) e
 ON a.open_emp_id = e.emp_id
 INNER JOIN (SELECT branch_id
-			FROM branch
-			WHERE name = 'Woburn Branch') b
+            FROM branch
+            WHERE name = 'Woburn Branch') b
 ON e.assigned_branch_id = b.branch_id;
 
 
@@ -187,7 +183,7 @@ INNER JOIN employee chief ON e.superior_emp_id = chief.emp_id;
 SELECT e.emp_id, e.fname, e.lname, e.start_date
 FROM employee e 
 INNER JOIN product p ON e.start_date >= p.date_offered
-	AND e.start_date <= p.date_retired;
+    AND e.start_date <= p.date_retired;
 
 
 -- Управляющий операциями решил провести шахматный турнир между всеми 
@@ -196,7 +192,6 @@ SELECT e1.fname, e1.lname, 'VS' vs, e2.fname, e2.lname
 FROM employee e1 
 INNER JOIN employee e2 ON e1.emp_id < e2.emp_id
 WHERE e1.title = 'Teller' AND e2.title = 'Teller';
-
 
 
 
@@ -222,7 +217,7 @@ SELECT cust_id, name FROM business;
 
 SELECT emp_id FROM employee
 WHERE assigned_branch_id = 2
-	AND (title = 'Teller' OR title = 'Head Teller')
+    AND (title = 'Teller' OR title = 'Head Teller')
 UNION ALL
 SELECT DISTINCT open_emp_id FROM account
 WHERE open_branch_id = 2;
@@ -231,7 +226,7 @@ WHERE open_branch_id = 2;
 -- INTSERSECT (ALL) (нет в MySQL)
 SELECT emp_id FROM employee
 WHERE assigned_branch_id = 2
-	AND (title = 'Teller' OR title = 'Head Teller')
+    AND (title = 'Teller' OR title = 'Head Teller')
 INTERSECT
 SELECT DISTINCT open_emp_id FROM account
 WHERE open_branch_id = 2;
@@ -240,7 +235,7 @@ WHERE open_branch_id = 2;
 -- EXCEPT (ALL) (нет в MySQL)
 SELECT emp_id FROM employee
 WHERE assigned_branch_id = 2
-	AND (title = 'Teller' OR title = 'Head Teller')
+    AND (title = 'Teller' OR title = 'Head Teller')
 EXCEPT
 SELECT DISTINCT open_emp_id FROM account
 WHERE open_branch_id = 2;
@@ -257,7 +252,3 @@ WHERE b.name = 'Woburn Branch'
 UNION
 SELECT cust_id FROM account
 WHERE avail_balance BETWEEN 500 AND 2500;
-
-
-
-

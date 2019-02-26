@@ -1,32 +1,80 @@
+-------------------------------FUNCTION------------------------------------
+source script.sql  --загрузить из скрипта
+show warnings
+show databases
+show tables
+show columns from employee  --описание таблицы
+desc bank.employee          --описание таблицы
+select count(*) from employee   -- количество строк
+select count(distinct gender) from employee
+
+CONCAT() -- что делает посмотреть
+
+ROUND()
+
+LEFT()
+RIGHT()
+SUBSTR(string, index, amount)
+LENGTH()
+LOWER()
+UPPER()
+
+NOW()
+YEAR()
+MONTH()
+MONTHNAME()
+---------------------------------------------------------------------------
+
+
 ----------------------------------- SAMPLES-------------------------------
--- просмотр ограничений таблицы
-SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME,
+-- Показать FK ограничения таблицы:
+SELECT CONSTRAINT_NAME, TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME,
     REFERENCED_COLUMN_NAME
 FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE TABLE_SCHEMA = 'bank' AND TABLE_NAME = 'employee' 
-      AND REFERENCED_COLUMN_NAME IS NOT NULL;
+WHERE REFERENCED_TABLE_SCHEMA = 'bank' AND 
+    (REFERENCED_TABLE_NAME = 'employee' OR TABLE_NAME = 'employee');
 
--- просмотр комментариев к таблице
+
+-- Показать комментарий к таблице:
 SELECT TABLE_COMMENT
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_SCHEMA = 'bank' AND TABLE_NAME = 'individual';
+
+
+-- Показать юзеров и их привелегии
+SELECT user FROM mysql.user;
+show grants for slice@localhos
+---------------------------------------------------------------------------
+
+SHOW PROCEDURE STATUS;
+SHOW FUNCTION STATUS;
 ---------------------------------------------------------------------------
 
 
+GRANT ALL PRIVILEGES ON `check_book`.* TO slice@'%' IDENTIFIED BY 'codeslice256';  -- хз что это непомню
 ---------------------------------------------------------------------------
+
+
+
+
+
+
+-- Алан Бьюли - Изучаем SQL (2007):
 -- 3.1
 SELECT emp_id, fname, lname FROM employee ORDER BY lname, fname;
 
 -- 3.2
-SELECT account_id, cust_id, avail_balance FROM account  
+SELECT account_id, cust_id, avail_balance FROM account
 WHERE status = 'ACTIVE' AND avail_balance > 2500;
 
 -- 3.3
 SELECT DISTINCT open_emp_id FROM account;
 
 -- 3.4
-SELECT p.product_cd, a.cust_id, a.avail_balance FROM product p 
-INNER JOIN account a ON p.product_cd = a.product_cd WHERE p.product_type_cd = 'ACCOUNT';
+SELECT p.product_cd, a.cust_id, a.avail_balance
+FROM product p 
+INNER JOIN account a ON p.product_cd = a.product_cd
+WHERE p.product_type_cd = 'ACCOUNT';
 
 
 
