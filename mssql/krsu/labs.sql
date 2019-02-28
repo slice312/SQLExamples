@@ -1,11 +1,12 @@
--- LAB 2:
-
 --The standard convention in SQL Server is:
 -- PRIMARY KEY:       PK_Tablename
 -- FOREIGN KEY:       FK_ForeignKeyTable_PrimaryKeyTable
 -- UNIQUE:            UQ_TableName>_ColumnName(s)
 -- CHECK CONSTRAINT:  CHK_TableName_ColumnName
 -- INDEX:             IX_TableName_Column(s)
+
+-- LAB 2:
+
 USE [krsu_1]
 
 CREATE TABLE [Страны]
@@ -26,9 +27,12 @@ CREATE TABLE [Города]
   CONSTRAINT [FK_Города_Страны] FOREIGN KEY ([Код страны])
     REFERENCES [dbo].[Страны] ([Код страны])
     ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT [UQ_Города_НаименованиеГорода_КодСтраны] UNIQUE ([Наименование Города], [Код страны])
+    ON UPDATE CASCADE
 );
+
+CREATE UNIQUE INDEX [IX_Города_НаименованиеГорода_КодСтраны]
+ON [dbo].[Города] ([Наименование города], [Код страны])
+
 
 
 CREATE TABLE [Сотрудники]
@@ -49,7 +53,6 @@ CREATE TABLE [Сотрудники]
     ON UPDATE CASCADE
 );
 
-
 ALTER TABLE [dbo].[Сотрудники]
   ADD [Семейное положение] BIT;
 
@@ -61,7 +64,7 @@ VALUES ('Россия'), ('Кыргызстан'), ('Казахстан')
 INSERT INTO [dbo].[Города] ([Наименование города], [Код страны])
 VALUES ('Бишкек', 2), ('Ош', 2)
 
-INSERT INTO [dbo].[Сотрудники] (Фамилия, Имя, Отчество, [Дата рождения], Зарплата, [Код города])
+INSERT INTO [dbo].[Сотрудники] ([Фамилия], [Имя], [Отчество], [Дата рождения], [Зарплата], [Код города])
 VALUES 
   ('Петров', 'Игорь', 'Михайлович', '25-03-1987', 265.0, 1),
   ('Петров', 'Юлий', 'Андреев', '07-05-1985', 255.0, 1),
@@ -72,12 +75,13 @@ VALUES
 
 ALTER TABLE [dbo].[Сотрудники]
   DROP CONSTRAINT [CHK_Сотрудники_Зарплата]
-
 ALTER TABLE [dbo].[Сотрудники]
-  ADD CONSTRAINT [CHK_Сотрудники_Зарплата] CHECK (Зарплата < 1200)
+  ADD CONSTRAINT [CHK_Сотрудники_Зарплата] CHECK ([Зарплата] >= 200 AND [Зарплата] <= 1200)
 
-ALTER TABLE [dbo].[Сотрудники]
-  ADD CONSTRAINT [UQ_Сотрудники_ФИО_ДатаРождения] UNIQUE (Фамилия, Имя, Отчество, [Дата рождения])
+
+CREATE UNIQUE INDEX [IX_Сотрудники_ФИО_ДатаРождения]
+ON [dbo].[Сотрудники] ([Фамилия], [Имя], [Отчество], [Дата рождения])
+
 
 ALTER TABLE [dbo].[Сотрудники]
   ADD CONSTRAINT [CHK_Сотрудники_ДатаРождения] CHECK (YEAR(GETDATE()) - YEAR([Дата рождения]) <= 60)
@@ -98,6 +102,9 @@ ALTER TABLE [dbo].[Города]
     ON DELETE CASCADE
     ON UPDATE CASCADE
 
+-- UNIQUE KEY
+ALTER TABLE [dbo].[Сотрудники]
+  ADD CONSTRAINT [UQ_Сотрудники_ФИО_ДатаРождения] UNIQUE ([Фамилия], [Имя], [Отчество], [Дата рождения])
 
 
 
