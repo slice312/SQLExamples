@@ -82,3 +82,9 @@ VALUES ((SELECT person_id FROM person WHERE fname = 'BoJack'), 'taco');
 --не работает если подзапрос возвращает больше 1 строки
 INSERT INTO favorite_food (person_id, food)
 VALUES ((SELECT person_id FROM person WHERE gender = 'F'), 'rolls');
+
+
+
+
+--------------------------------------------
+SELECT LENGTH(fname) name_len, fname FROM person;

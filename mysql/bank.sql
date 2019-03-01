@@ -122,9 +122,9 @@ INNER JOIN branch b ON e.assigned_branch_id = b.branch_id
 ORDER BY e.emp_id;
 
 
--- запрос, по которому возвращаются все счета, открытые
+-- Запрос, по которому возвращаются все счета, открытые
 -- операционистами (нанятыми до 2003-года), в настоящее время приписанными
--- к отделению Woburn (1 вариант):
+-- к отделению Woburn (1 вариант).
 SELECT a.account_id, a.cust_id, a.open_date, a.product_cd 
 FROM account a 
 INNER JOIN employee e ON a.open_emp_id = e.emp_id
@@ -134,8 +134,8 @@ WHERE e.start_date <= '2003-01-01'
     AND b.name = 'Woburn Branch';
 
 
--- запрос, возвращающий работника открывшего счет, ID счета и идентификационный номер
--- федерального налога для всех бизнес-счетов:
+-- Запрос, возвращающий работника открывшего счет, ID счета и идентификационный номер
+-- федерального налога для всех бизнес-счетов.
 SELECT a.account_id, c.fed_id, e.fname, e.lname
 FROM customer c 
 INNER JOIN account a ON a.cust_id = c.cust_id
@@ -143,9 +143,9 @@ INNER JOIN employee e ON a.open_emp_id = e.emp_id
 WHERE c.cust_type_cd = 'B';
 
 
--- запрос, по которому возвращаются все счета, открытые опытными
+-- Запрос, по которому возвращаются все счета, открытые опытными
 -- операционистами (нанятыми до 2003-года), в настоящее время приписанными
--- к отделению Woburn (2 вариант):
+-- к отделению Woburn (2 вариант).
 SELECT a.account_id, a.cust_id, a.open_date, a.product_cd
 FROM account a 
 INNER JOIN (SELECT emp_id, assigned_branch_id
@@ -162,7 +162,7 @@ ON e.assigned_branch_id = b.branch_id;
 --------------- ПОВТОРНОЕ ВКЛЮЧЕНИЕ ОДНОЙ ТАБЛИЦЫ С РАЗНЫМИ ПСЕВДОНИМАМИ---------
 -- Этот запрос показывает, кто открыл каждый текущий счет,
 -- в каком от делении это произошло и к какому отделению приписан в настоящее
--- время сотрудник, открывший счет:
+-- время сотрудник, открывший счет.
 SELECT a.account_id, e.emp_id, b_a.name open_branch, b_e.name emp_branch
 FROM account a 
 INNER JOIN branch b_a ON a.open_branch_id = b_a.branch_id
@@ -173,7 +173,7 @@ WHERE a.product_cd = 'CHK';
 
 -------------------- РЕКУРСИВНОЕ ВКЛЮЧЕНИЕ ТАБЛИЦЫ ------------------------------
 -- У работника есть начальник (другой работник), ключ superior_emp_id является
--- внешним ключом, который ссылается на эту же таблицу к первичному ключу, id работника:
+-- внешним ключом, который ссылается на эту же таблицу к первичному ключу, id работника.
 SELECT e.fname, e.lname, chief.fname chief_fname, chief.lname chief_lname
 FROM employee e 
 INNER JOIN employee chief ON e.superior_emp_id = chief.emp_id;
@@ -187,7 +187,7 @@ INNER JOIN product p ON e.start_date >= p.date_offered
 
 
 -- Управляющий операциями решил провести шахматный турнир между всеми 
--- операционистами банка. Требуется создать список всех пар игроков:
+-- операционистами банка. Требуется создать список всех пар игроков.
 SELECT e1.fname, e1.lname, 'VS' vs, e2.fname, e2.lname
 FROM employee e1 
 INNER JOIN employee e2 ON e1.emp_id < e2.emp_id
@@ -215,15 +215,18 @@ UNION ALL
 SELECT cust_id, name FROM business;
 
 
+-- Найти работников которые работают отделе 2 (Woburn Branch),
+-- и работников которые открывали счета в этом отделе.
 SELECT emp_id FROM employee
 WHERE assigned_branch_id = 2
     AND (title = 'Teller' OR title = 'Head Teller')
-UNION ALL
-SELECT DISTINCT open_emp_id FROM account
+UNION
+SELECT open_emp_id FROM account
 WHERE open_branch_id = 2;
 
 
 -- INTSERSECT (ALL) (нет в MySQL)
+-- Найти работников которые открывали счета в отделе 2 и сейчас работают там же.
 SELECT emp_id FROM employee
 WHERE assigned_branch_id = 2
     AND (title = 'Teller' OR title = 'Head Teller')
@@ -233,6 +236,7 @@ WHERE open_branch_id = 2;
 
 
 -- EXCEPT (ALL) (нет в MySQL)
+-- Найти работников которые сейчас в отделе 2, и никогда не открывали счета в этом отделе.
 SELECT emp_id FROM employee
 WHERE assigned_branch_id = 2
     AND (title = 'Teller' OR title = 'Head Teller')
@@ -243,12 +247,41 @@ WHERE open_branch_id = 2;
 
 
 
-SELECT cust_id FROM account
-WHERE product_cd IN ('SAV', 'MM')
-UNION ALL
-SELECT a.cust_id FROM account a 
-INNER JOIN branch b ON a.open_branch_id = b.branch_id
-WHERE b.name = 'Woburn Branch'
-UNION
-SELECT cust_id FROM account
-WHERE avail_balance BETWEEN 500 AND 2500;
+
+
+
+-------------7 ГЛАВА------------------
+SELECT LENGTH(char_fld) char_length,
+LENGTH(vchar_fld) varchar_length,
+LENGTH(text_fld) text_length
+FROM string_tbl;
+
+
+
+SELECT CONCAT(fname, ' ', lname, ' has been a ',
+    title, ' since ', start_date) emp_narrative
+FROM employee
+WHERE title = 'Teller' OR title = 'Head Teller';
+
+
+SELECT POW(2, 10) kilobyte, POW(2, 20) megabyte, POW(2, 30) gigabyte, POW(2, 40) terabyte;
+
+
+SELECT ROUND(72.0909, 1), ROUND(72.0909, 2), ROUND(72.0909, 3);
+SELECT TRUNCATE(72.0909, 1), TRUNCATE(72.0909, 2), TRUNCATE(72.0909, 3);
+SELECT ROUND(155, -1), TRUNCATE(155, -1), ROUND(155, -2), TRUNCATE(155, -2);
+
+SELECT account_id, SIGN(avail_balance), ABS(avail_balance)
+FROM account;
+
+
+SELECT CAST('2005-03-27' AS DATE) date_field,
+CAST('108:17:57' AS TIME) time_field;
+
+
+INSERT INTO ch (date) 
+VALUES (STR_TO_DATE('March 27, 2005', '%M %d, %Y'));
+
+SELECT CURRENT_DATE(), CURRENT_TIME(), CURRENT_TIMESTAMP(), NOW();
+
+SELECT DATE_ADD(CURRENT_DATE(), INTERVAL 5 DAY);
