@@ -67,13 +67,16 @@ DATE_ADD()
 YEAR()
 MONTH()
 MONTHNAME()
+
+EXTRACT(YEAR FROM start_date)
+
+
+-------------------------------AGGREGATING FUNCTIONS-------------------------------------
+count(), sum(), min(), max(), avg()
+
+
+
 ---------------------------------------------------------------------------
-
-
-
-
-
-
 
 
 
@@ -193,3 +196,30 @@ SELECT ABS(-25.76823), SIGN(-25.76823), ROUND(-25.76823, 2);
 -- 7.3
 SELECT MONTH(NOW()), MONTHNAME(NOW());
 SELECT EXTRACT(MONTH FROM CURRENT_DATE());
+
+
+
+-- 8.1
+SELECT COUNT(*) rows FROM account;
+
+-- 8.2
+SELECT  acc.cust_id, ind.fname, COUNT(*) AS accounts
+FROM account AS acc
+LEFT JOIN individual AS ind ON acc.cust_id = ind.cust_id
+GROUP BY acc.cust_id;
+
+-- 8.3
+SELECT  acc.cust_id, ind.fname, COUNT(*) AS accounts
+FROM account AS acc
+LEFT JOIN individual AS ind ON acc.cust_id = ind.cust_id
+GROUP BY acc.cust_id
+HAVING accounts >= 2
+ORDER BY accounts;
+
+-- 8.4
+SELECT a.product_cd, b.name AS branch, SUM(a.avail_balance) balance
+FROM account AS a
+INNER JOIN branch AS b ON a.open_branch_id = b.branch_id
+GROUP BY a.product_cd, a.open_branch_id
+HAVING COUNT(*) > 1
+ORDER BY balance DESC;

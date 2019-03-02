@@ -5,12 +5,14 @@ SELECT DISTINCT cust_id FROM account;
 SELECT emp_id, 'ACTIVE', emp_id * 2, UPPER(fname) FROM employee;
 
 -- псевдонимы
-SELECT emp_id, 'ACTIVE' status, emp_id * 3.14159 empid_x_pi, 
+SELECT emp_id, 'ACTIVE' status, emp_id * 3.14159 empid_x_pi,
     UPPER(lname) last_name_upper FROM employee;
 
+SELECT emp_id AS id, 'ACTIVE' AS status FROM employee;
+
 -- подзапросы
-SELECT t.open_date 
-FROM (SELECT * FROM account WHERE avail_balance > 5000) t;
+SELECT t.open_date
+FROM (SELECT * FROM account WHERE avail_balance > 5000) AS t;
 
 SELECT t.emp_id, t.fname, t.lname
 FROM (SELECT emp_id, fname, lname, start_date, title FROM employee) t;
@@ -99,9 +101,9 @@ SELECT * FROM employee WHERE superior_emp_id IS NOT NULL;
 SELECT e.fname, e.lname, d.name FROM employee e JOIN department d;
 
 -- INNER JOIN
-SELECT e.fname, e.lname, d.name 
-FROM employee e 
-INNER JOIN department d ON e.dept_id = d.dept_id 
+SELECT e.fname, e.lname, d.name
+FROM employee AS e
+INNER JOIN department AS d ON e.dept_id = d.dept_id
 ORDER BY e.emp_id;
 
 -- старый синтаксиc
@@ -115,7 +117,7 @@ FROM employee e
 INNER JOIN department d USING (dept_id);
 
 -- соединение 3 таблиц
-SELECT e.fname, e.lname, d.name department, b.name branch, b.city 
+SELECT e.fname, e.lname, d.name department, b.name branch, b.city
 FROM employee e
 INNER JOIN department d ON e.dept_id = d.dept_id
 INNER JOIN branch b ON e.assigned_branch_id = b.branch_id
@@ -125,7 +127,7 @@ ORDER BY e.emp_id;
 -- Запрос, по которому возвращаются все счета, открытые
 -- операционистами (нанятыми до 2003-года), в настоящее время приписанными
 -- к отделению Woburn (1 вариант).
-SELECT a.account_id, a.cust_id, a.open_date, a.product_cd 
+SELECT a.account_id, a.cust_id, a.open_date, a.product_cd
 FROM account a 
 INNER JOIN employee e ON a.open_emp_id = e.emp_id
 INNER JOIN branch b ON e.assigned_branch_id = b.branch_id
@@ -164,10 +166,10 @@ ON e.assigned_branch_id = b.branch_id;
 -- в каком от делении это произошло и к какому отделению приписан в настоящее
 -- время сотрудник, открывший счет.
 SELECT a.account_id, e.emp_id, b_a.name open_branch, b_e.name emp_branch
-FROM account a 
-INNER JOIN branch b_a ON a.open_branch_id = b_a.branch_id
-INNER JOIN employee e ON a.open_emp_id = e.emp_id
-INNER JOIN branch b_e ON e.assigned_branch_id = b_e.branch_id
+FROM account AS a
+INNER JOIN branch AS b_a ON a.open_branch_id = b_a.branch_id
+INNER JOIN employee AS e ON a.open_emp_id = e.emp_id
+INNER JOIN branch  AS b_e ON e.assigned_branch_id = b_e.branch_id
 WHERE a.product_cd = 'CHK';
 
 
@@ -186,7 +188,7 @@ INNER JOIN product p ON e.start_date >= p.date_offered
     AND e.start_date <= p.date_retired;
 
 
--- Управляющий операциями решил провести шахматный турнир между всеми 
+-- Управляющий операциями решил провести шахматный турнир между всеми
 -- операционистами банка. Требуется создать список всех пар игроков.
 SELECT e1.fname, e1.lname, 'VS' vs, e2.fname, e2.lname
 FROM employee e1 
@@ -285,3 +287,86 @@ VALUES (STR_TO_DATE('March 27, 2005', '%M %d, %Y'));
 SELECT CURRENT_DATE(), CURRENT_TIME(), CURRENT_TIMESTAMP(), NOW();
 
 SELECT DATE_ADD(CURRENT_DATE(), INTERVAL 5 DAY);
+
+
+
+
+
+
+-------------8 ГЛАВА------------------
+SELECT open_emp_id FROM account
+GROUP BY open_emp_id;
+
+SELECT open_emp_id, COUNT(*) how_many FROM account
+GROUP BY open_emp_id;
+
+
+
+SELECT open_emp_id, how_many
+FROM (SELECT open_emp_id, COUNT(*) how_many FROM account GROUP BY open_emp_id) AS t
+WHERE how_many > 4;
+
+
+SELECT open_emp_id, COUNT(*) how_many
+FROM account
+GROUP BY open_emp_id
+HAVING how_many > 4;
+
+
+
+SELECT MAX(avail_balance) max_balance, MIN(avail_balance) min_balance,
+    AVG(avail_balance) avg_balance, SUM(avail_balance) tot_balance,
+    COUNT(*) num_accounts
+FROM account
+WHERE product_cd = 'CHK';
+
+
+SELECT product_cd, MAX(avail_balance) max_balance, MIN(avail_balance) min_balance,
+    AVG(avail_balance) avg_balance, SUM(avail_balance) tot_balance, COUNT(*) num_accts
+FROM account
+GROUP BY product_cd;
+
+
+-- NULL значения не считает
+SELECT count(distinct open_emp_id) FROM account;
+
+SELECT max(pending_balance - avail_balance) max_uncleared FROM account;
+
+SELECT diff FROM (SELECT (pending_balance - avail_balance) diff from account) t
+where t.diff > 0;
+
+----:
+SELECT product_cd, SUM(avail_balance) prod_balance
+FROM account
+GROUP BY product_cd;
+
+
+SELECT product_cd, open_branch_id, SUM(avail_balance) tot_balance
+FROM account
+GROUP BY product_cd, open_branch_id;
+
+
+SELECT YEAR(start_date) year, COUNT(*) how_many
+FROM employee
+GROUP BY YEAR(start_date);
+
+
+SELECT product_cd, open_branch_id,
+SUM(avail_balance) tot_balance
+FROM account
+GROUP BY product_cd  , open_branch_id WITH ROLLUP;
+
+
+SELECT product_cd, SUM(avail_balance) prod_balance
+FROM account
+WHERE status = 'ACTIVE'
+GROUP BY product_cd
+HAVING SUM(avail_balance) >= 10000;
+
+
+SELECT product_cd, SUM(avail_balance) prod_balance
+FROM account
+WHERE status = 'ACTIVE'
+GROUP BY product_cd
+HAVING MIN(avail_balance) >= 1000
+    AND MAX(avail_balance) <= 10000;
