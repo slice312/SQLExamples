@@ -27,11 +27,10 @@ CREATE TABLE [Города]
   CONSTRAINT [FK_Города_Страны] FOREIGN KEY ([Код страны])
     REFERENCES [dbo].[Страны] ([Код страны])
     ON DELETE CASCADE
-    ON UPDATE CASCADE
+    ON UPDATE CASCADE,
+  INDEX [IX_Города_НаименованиеГорода_КодСтраны]
+    UNIQUE ([Наименование города], [Код страны]),
 );
-
-CREATE UNIQUE INDEX [IX_Города_НаименованиеГорода_КодСтраны]
-ON [dbo].[Города] ([Наименование города], [Код страны])
 
 
 
@@ -79,47 +78,48 @@ ALTER TABLE [dbo].[Сотрудники]
   ADD CONSTRAINT [CHK_Сотрудники_Зарплата] CHECK ([Зарплата] >= 200 AND [Зарплата] <= 1200)
 
 
+-- уникальность сочетания полей
 CREATE UNIQUE INDEX [IX_Сотрудники_ФИО_ДатаРождения]
 ON [dbo].[Сотрудники] ([Фамилия], [Имя], [Отчество], [Дата рождения])
 
 
 ALTER TABLE [dbo].[Сотрудники]
   ADD CONSTRAINT [CHK_Сотрудники_ДатаРождения] CHECK (YEAR(GETDATE()) - YEAR([Дата рождения]) <= 60)
-
---------------------------------------------------------------------------------------------------
-
+----------------------------------------------------------------------------------------------------------------
 
 
+-- DROP с условием, если нет вывести дату:
+IF OBJECT_ID('dbo.Страны') IS NOT NULL
+  DROP TABLE [dbo].[Страны];
+ELSE
+  SELECT GETDATE()
 
+
+-- ОЧИСТКА
 -- перед очисткой надо сбросить foreign key, потом возвращаю
 ALTER TABLE [dbo].[Города]
-  DROP CONSTRAINT [fk_Города_Страны]
+  DROP CONSTRAINT [FK_Города_Страны]
 TRUNCATE TABLE [dbo].[Страны]
 
 ALTER TABLE [dbo].[Города]
-  ADD CONSTRAINT [fk_Города_Страны] FOREIGN KEY ([Код страны])
+  ADD CONSTRAINT [FK_Города_Страны] FOREIGN KEY ([Код страны])
     REFERENCES [dbo].[Страны] ([Код страны])
     ON DELETE CASCADE
     ON UPDATE CASCADE
+
 
 -- UNIQUE KEY
 ALTER TABLE [dbo].[Сотрудники]
   ADD CONSTRAINT [UQ_Сотрудники_ФИО_ДатаРождения] UNIQUE ([Фамилия], [Имя], [Отчество], [Дата рождения])
 
 
-
-
 -- DROP с условием, если нет вывести дату:
-IF OBJECT_ID('dbo.Страны') IS NOT NULL 
+IF OBJECT_ID('dbo.Страны') IS NOT NULL
   DROP TABLE [dbo].[Страны];
-ELSE SELECT GETDATE()
-
--- сбросить Foreign Key
-ALTER TABLE [dbo].[Города] 
-DROP CONSTRAINT [fk_Города_Страны]
+ELSE
+  SELECT GETDATE()
 
 
-
-
+-- ВЫВОД
 SELECT TOP (1000) [Код города], [Наименование города], [Код страны]
 FROM [krsuEdu_1].[dbo].[Города]
