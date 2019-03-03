@@ -223,3 +223,27 @@ INNER JOIN branch AS b ON a.open_branch_id = b.branch_id
 GROUP BY a.product_cd, a.open_branch_id
 HAVING COUNT(*) > 1
 ORDER BY balance DESC;
+
+
+-- НЕ ПРОВЕРЕНО 🡇🡇🡇
+
+-- 9.1
+SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance FROM account AS a
+WHERE a.product_cd IN (SELECT product_cd FROM product
+    WHERE product_type_cd = 'LOAN');
+
+-- 9.2
+SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance FROM account AS a
+WHERE 'LOAN' = (SELECT product_type_cd FROM product AS p
+    WHERE p.product_cd = a.product_cd);
+
+
+-- 9.3 (НЕ СМОГ СДЕЛАТЬ С ПОДЗАПРОСОМ)
+SELECT emp.emp_id, emp.fname, cv.name FROM employee AS emp
+INNER JOIN
+(SELECT 'trainee' name, '2004-01-01' start_dt, '2005-12-31' end_dt
+UNION ALL
+SELECT 'worker' name, '2002-01-01' start_dt, '2003-12-31' end_dt
+UNION ALL
+SELECT 'mentor' name, '2000-01-01' start_dt, '2001-12-31' end_dt) AS cv 
+    ON emp.start_date BETWEEN cv.start_dt and end_dt;
