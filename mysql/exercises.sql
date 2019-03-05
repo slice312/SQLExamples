@@ -5,8 +5,6 @@ show databases
 show tables
 show columns from employee  --описание таблицы
 desc bank.employee          --описание таблицы
-select count(*) from employee   -- количество строк
-select count(distinct gender) from employee
 
 
 CAST(obj AS INT)  -- приведение типов;
@@ -45,7 +43,8 @@ INSERT(string, int pos, int count, string) -- заменяет в строке �
     -- символов, новой строкой. Если count = 0, то старая строка расширяется;
 SUBSTR(string, int pos, int count) -- -> подстроку из строки; 
 
-LEFT()
+
+LEFT() -- с числами тоже
 RIGHT()
 
 
@@ -72,7 +71,7 @@ EXTRACT(YEAR FROM start_date)
 
 
 -------------------------------AGGREGATING FUNCTIONS-------------------------------------
-count(), sum(), min(), max(), avg()
+COUNT(), SUM(), MIN(), MAX(), AVG()
 
 
 
@@ -95,17 +94,21 @@ FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_SCHEMA = 'bank' AND TABLE_NAME = 'individual';
 
 
--- Показать юзеров и их привелегии
-SELECT user FROM mysql.user;
-show grants for slice@localhos
+
 ---------------------------------------------------------------------------
 
 SHOW PROCEDURE STATUS;
 SHOW FUNCTION STATUS;
 ---------------------------------------------------------------------------
 
+-- Создание юзера
+CREATE USER 'slice'@'localhost' IDENTIFIED BY 'qwe';
+GRANT ALL PRIVILEGES ON * . * TO 'slice'@'localhost';
+FLUSH PRIVILEGES;
 
-GRANT ALL PRIVILEGES ON `check_book`.* TO slice@'%' IDENTIFIED BY 'codeslice256';  -- хз что это непомню
+-- Показать юзеров и их привелегии
+SELECT user FROM mysql.user;
+SHOW GRANTS FOR slice@localhost;
 ---------------------------------------------------------------------------
 
 
@@ -113,7 +116,7 @@ GRANT ALL PRIVILEGES ON `check_book`.* TO slice@'%' IDENTIFIED BY 'codeslice256'
 
 
 
--- Алан Бьюли - Изучаем SQL (2007):
+-- Упражнения из "Алан Бьюли - Изучаем SQL (2007)":
 -- 3.1
 SELECT emp_id, fname, lname FROM employee ORDER BY lname, fname;
 
@@ -200,29 +203,58 @@ SELECT EXTRACT(MONTH FROM CURRENT_DATE());
 
 
 -- 8.1
-SELECT COUNT(*) rows FROM account;
+SELECT COUNT(*) `rows` FROM account;
 
 -- 8.2
-SELECT  acc.cust_id, ind.fname, COUNT(*) AS accounts
-FROM account AS acc
-LEFT JOIN individual AS ind ON acc.cust_id = ind.cust_id
-GROUP BY acc.cust_id;
+SELECT cust_id, COUNT(*) accounts
+FROM account
+GROUP BY cust_id;
+
+-- 8.2* (Мой вариант, дополнительно выводит имена владельцев)
+SELECT t.cust_id, t.fname, t.lname, t.accounts FROM(
+    SELECT acc.cust_id, ind.fname fname, ind.lname lname, COUNT(*) accounts
+    FROM account AS acc
+    INNER JOIN individual AS ind ON acc.cust_id = ind.cust_id
+    GROUP BY acc.cust_id
+    UNION
+    SELECT acc.cust_id, ofc.fname fname, ofc.lname lname, COUNT(*) accounts
+    FROM account AS acc
+    INNER JOIN officer AS ofc ON acc.cust_id = ofc.cust_id
+    GROUP BY acc.cust_id
+) AS t
+ORDER BY t.accounts;
+
 
 -- 8.3
-SELECT  acc.cust_id, ind.fname, COUNT(*) AS accounts
-FROM account AS acc
-LEFT JOIN individual AS ind ON acc.cust_id = ind.cust_id
-GROUP BY acc.cust_id
-HAVING accounts >= 2
-ORDER BY accounts;
+SELECT cust_id, COUNT(*) accounts
+FROM account
+GROUP BY cust_id
+HAVING accounts >= 2;
+
+-- 8.3*
+SELECT t.cust_id, t.fname, t.lname, t.accounts FROM(
+    SELECT acc.cust_id, ind.fname fname, ind.lname lname, COUNT(*) accounts
+    FROM account AS acc
+    INNER JOIN individual AS ind ON acc.cust_id = ind.cust_id
+    GROUP BY acc.cust_id
+    UNION
+    SELECT acc.cust_id, ofc.fname fname, ofc.lname lname, COUNT(*) accounts
+    FROM account AS acc
+    INNER JOIN officer AS ofc ON acc.cust_id = ofc.cust_id
+    GROUP BY acc.cust_id
+) AS t
+WHERE t.accounts >= 2
+ORDER BY t.accounts;
+
 
 -- 8.4
-SELECT a.product_cd, b.name AS branch, SUM(a.avail_balance) balance
+SELECT a.product_cd, b.name branch, SUM(a.avail_balance) balance
 FROM account AS a
 INNER JOIN branch AS b ON a.open_branch_id = b.branch_id
 GROUP BY a.product_cd, a.open_branch_id
 HAVING COUNT(*) > 1
 ORDER BY balance DESC;
+
 
 
 -- НЕ ПРОВЕРЕНО 🡇🡇🡇
