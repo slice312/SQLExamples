@@ -95,7 +95,7 @@ SELECT * FROM employee WHERE superior_emp_id IS NOT NULL;
 
 
 /*-------------------------------------------------------------------------
-                          СОЕДИНЕНИЕ JOIN
+                          СОЕДИНЕНИЕ (INNER JOIN)
 --------------------------------------------------------------------------- */
 -- CROSS JOIN (декартово произведение)
 SELECT e.fname, e.lname, d.name FROM employee e JOIN department d;
@@ -250,8 +250,119 @@ WHERE open_branch_id = 2;
 
 
 
+/*-------------------------------------------------------------------------
+                    ГРУППИРОВКА И АГРЕГАТЫ (GROUP BY, HAVING)
+--------------------------------------------------------------------------- */
+-- Сколько счетов открыл каждый сотрудник.
+-- Группирует акк-ы по id открывающего, и функция COUNT() считает
+-- кол-во строк в каждой группе.
+SELECT open_emp_id, COUNT(*) how_many FROM account
+GROUP BY open_emp_id;
+
+-- Можно посчитать по 1 столбцу для каждой группы, если значение
+-- столбца NULL, то не считает.
+SELECT open_emp_id, COUNT(cust_id) how_many FROM account
+GROUP BY open_emp_id;
+
+-- Сколько счетов открыл каждый сотрудник для разных клиентов.
+-- Число уникальных значений столбца в группе.
+SELECT open_emp_id, COUNT(DISTINCT cust_id) how_many FROM account
+GROUP BY open_emp_id;
+
+-- Необязательно GROUP BY, по умолчанию всегда есть 1 неявная группа,
+-- к которой можно применить агрегатную функцию.
+-- Вычисляет сумму столбца для всех строк.
+SELECT SUM(avail_balance) how_many FROM account;
+-- Можно помещать выражения в функции.
+SELECT MAX(pending_balance - avail_balance) max_uncleared FROM account;
 
 
+-- HAVING.
+-- Блок GROUP BY выполняется после WHERE, поэтому в нем нельзя использовать
+-- агрегатные функции. Для фильтрации по группам есть HAVING.
+SELECT open_emp_id, COUNT(*) how_many FROM account
+GROUP BY open_emp_id
+HAVING how_many > 4;
+-- Вариант запроса без HAVING.🡇
+SELECT t.open_emp_id, t.how_many
+FROM (SELECT open_emp_id, COUNT(*) how_many FROM account GROUP BY open_emp_id) AS t
+WHERE t.how_many > 4;
+
+
+-- Статистическая инфа по счетам разных типов (разные product_cd).
+SELECT product_cd, MAX(avail_balance) max_balance, MIN(avail_balance) min_balance,
+    AVG(avail_balance) avg_balance, SUM(avail_balance) tot_balance, COUNT(*) num_accs
+FROM account
+GROUP BY product_cd
+ORDER BY avg_balance;
+
+
+-- Группировка по нескольким столбцам.
+SELECT product_cd, open_branch_id, SUM(avail_balance) tot_balance
+FROM account
+GROUP BY product_cd, open_branch_id;
+
+
+-- Группировка сотрудников по году начала их работы.
+SELECT YEAR(start_date) year, COUNT(*) how_many
+FROM employee
+GROUP BY year
+ORDER BY year;
+
+
+-- Фильтрация до включения в группу и после.
+-- Вывести для каждого типа счета (product_cd) кол-во счетов и их баланс.
+-- Причем где баланс для одного типа превышает 10_000,
+-- а счета имеют статус 'ACTIVE'.
+SELECT product_cd, SUM(avail_balance) prod_balance, COUNT(*) `count`
+FROM account
+WHERE status = 'ACTIVE'
+GROUP BY product_cd
+HAVING prod_balance >= 10000
+ORDER BY prod_balance;
+
+
+-- В блоке HAVING не обязательно должны быть функции из SELECT.
+SELECT product_cd, SUM(avail_balance) prod_balance
+FROM account
+WHERE status = 'ACTIVE'
+GROUP BY product_cd
+HAVING MIN(avail_balance) >= 1000
+    AND MAX(avail_balance) <= 10000
+ORDER BY prod_balance;
+
+
+-- Каков общий остаток для всех текущих счетов, открытых в отделении Woburn?
+SELECT product_cd, open_branch_id, SUM(avail_balance) tot_balance
+FROM account AS a
+INNER JOIN branch AS b ON b.branch_id = a.open_branch_id
+WHERE b.name = 'Woburn Branch'
+GROUP BY product_cd, open_branch_id;
+
+
+-- Список начальников и кол-во подчиненных.
+SELECT chief.emp_id, chief.fname, chief.lname, COUNT(*) `count`
+FROM employee chief
+INNER JOIN employee e ON chief.emp_id = e.superior_emp_id
+GROUP BY chief.emp_id
+ORDER BY `count`;
+
+
+-- Список всех работников и сколько у них подчиненных (даже если 0).
+SELECT chief.emp_id, chief.fname, chief.lname, COUNT(e.emp_id) subordinates
+FROM employee chief
+LEFT JOIN employee e ON chief.emp_id = e.superior_emp_id
+GROUP BY chief.emp_id
+ORDER BY subordinates DESC;
+
+
+
+
+
+
+
+
+ТИПЫ, приведение, даты
 -------------7 ГЛАВА------------------
 SELECT LENGTH(char_fld) char_length,
 LENGTH(vchar_fld) varchar_length,
@@ -293,62 +404,16 @@ SELECT DATE_ADD(CURRENT_DATE(), INTERVAL 5 DAY);
 
 
 
--------------8 ГЛАВА------------------
-SELECT open_emp_id FROM account
-GROUP BY open_emp_id;
-
-SELECT open_emp_id, COUNT(*) how_many FROM account
-GROUP BY open_emp_id;
 
 
 
-SELECT open_emp_id, how_many
-FROM (SELECT open_emp_id, COUNT(*) how_many FROM account GROUP BY open_emp_id) AS t
-WHERE how_many > 4;
-
-
-SELECT open_emp_id, COUNT(*) how_many
-FROM account
-GROUP BY open_emp_id
-HAVING how_many > 4;
 
 
 
-SELECT MAX(avail_balance) max_balance, MIN(avail_balance) min_balance,
-    AVG(avail_balance) avg_balance, SUM(avail_balance) tot_balance,
-    COUNT(*) num_accounts
-FROM account
-WHERE product_cd = 'CHK';
+☛разобрать ANY, IN, SOME
 
-
-SELECT product_cd, MAX(avail_balance) max_balance, MIN(avail_balance) min_balance,
-    AVG(avail_balance) avg_balance, SUM(avail_balance) tot_balance, COUNT(*) num_accts
-FROM account
-GROUP BY product_cd;
-
-
--- NULL значения не считает
-SELECT count(distinct open_emp_id) FROM account;
-
-SELECT max(pending_balance - avail_balance) max_uncleared FROM account;
-
-SELECT diff FROM (SELECT (pending_balance - avail_balance) diff from account) t
-where t.diff > 0;
-
-----:
-SELECT product_cd, SUM(avail_balance) prod_balance
-FROM account
-GROUP BY product_cd;
-
-
-SELECT product_cd, open_branch_id, SUM(avail_balance) tot_balance
-FROM account
-GROUP BY product_cd, open_branch_id;
-
-
-SELECT YEAR(start_date) year, COUNT(*) how_many
-FROM employee
-GROUP BY YEAR(start_date);
+-- КАК ЭТО РАБОТАЕТ  ☟
+⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔
 
 
 SELECT product_cd, open_branch_id,
@@ -356,17 +421,4 @@ SUM(avail_balance) tot_balance
 FROM account
 GROUP BY product_cd  , open_branch_id WITH ROLLUP;
 
-
-SELECT product_cd, SUM(avail_balance) prod_balance
-FROM account
-WHERE status = 'ACTIVE'
-GROUP BY product_cd
-HAVING SUM(avail_balance) >= 10000;
-
-
-SELECT product_cd, SUM(avail_balance) prod_balance
-FROM account
-WHERE status = 'ACTIVE'
-GROUP BY product_cd
-HAVING MIN(avail_balance) >= 1000
-    AND MAX(avail_balance) <= 10000;
+⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔
