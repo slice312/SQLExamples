@@ -21,7 +21,8 @@ CAST()
 getutcdate() 
 current_timestamp() 
 dateadd()
-
+YEAR()
+GETDATE()
 
 
 
