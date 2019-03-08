@@ -362,69 +362,283 @@ ORDER BY subordinates DESC;
 /*-------------------------------------------------------------------------
                                  ПОДЗАПРОСЫ
 --------------------------------------------------------------------------- */
+----------------------НЕСВЯЗАННЫЕ ПОДЗАПРОСЫ
+-- Выполняются перед содержащим выражением.
+
+-- 9.1
 SELECT account_id, product_cd, cust_id, avail_balance
 FROM account
 WHERE account_id = (SELECT MAX(account_id) FROM account);
 
 
+-- 9.2
+-- Если тут подзапрос вернет > 1 строки, то будет ошибка.
 SELECT account_id, product_cd, cust_id, avail_balance
 FROM account
-WHERE open_emp_id NOT IN (SELECT e.emp_id
-    FROM employee e 
-    INNER JOIN branch b ON e.assigned_branch_id = b.branch_id
-    WHERE e.title = 'Head Teller' AND b.city = 'Woburn'
-);
+WHERE open_emp_id != (
+        SELECT e.emp_id
+        FROM employee e
+        INNER JOIN branch b ON e.assigned_branch_id = b.branch_id
+        WHERE e.title = 'Head Teller' AND b.city = 'Woburn'
+    );
 
--- начальники
+
+
+-- 9.3
+-- Руководящий состав банка.
+-- Тут подзапрос возвращает несколько строк.
 SELECT emp_id, fname, lname, title
 FROM employee
-WHERE emp_id IN (SELECT superior_emp_id
-    FROM employee
-);
+WHERE emp_id IN (
+        SELECT superior_emp_id
+        FROM employee
+    );
 
--- неначальники
+
+-- 9.4
+-- В эти 2 подзапросах обязательна фильтрация NULL.
+-- Потому что при сравнении значения с NULL, результат NULL.
+-- НЕруководящий состав банка. (NOT IN)
 SELECT emp_id, fname, lname, title
 FROM employee
-WHERE emp_id NOT IN (SELECT superior_emp_id
-    FROM employee
-    WHERE superior_emp_id IS NOT NULL   
-);
-
+WHERE emp_id NOT IN (
+        SELECT superior_emp_id
+        FROM employee
+        WHERE superior_emp_id IS NOT NULL
+    );
+-- 9.5
+-- НЕруководящий состав банка. (!= ALL)
 SELECT emp_id, fname, lname, title
 FROM employee
-WHERE emp_id <> ALL (SELECT superior_emp_id
-FROM employee
-WHERE superior_emp_id IS NOT NULL);
+WHERE emp_id != ALL (
+        SELECT superior_emp_id
+        FROM employee
+        WHERE superior_emp_id IS NOT NULL
+    );
 
 
-SELECT emp_id, fname, lname, title
-FROM employee
-WHERE emp_id NOT IN (1, 2, NULL);
-
-
+-- 9.6
+-- Список счетов на которых доступный баланс
+-- меньше чем на любом из счетов Фрэнка Такера.     (< ALL)
 SELECT account_id, cust_id, product_cd, avail_balance
 FROM account
-WHERE avail_balance < ALL (SELECT a.avail_balance
-    FROM account a INNER JOIN individual i
-    ON a.cust_id = i.cust_id
-    WHERE i.fname = 'Frank' AND i.lname = 'Tucker'
-);
+WHERE avail_balance < ALL (
+        SELECT a.avail_balance
+        FROM account a
+        INNER JOIN individual i
+        ON a.cust_id = i.cust_id
+        WHERE i.fname = 'Frank' AND i.lname = 'Tucker'
+    );
 
-
+-- 9.7
+-- Список счетов на которых доступный баланс больше
+-- чем хотя бы на 1 из счетов Фрэнка Такера.        (> ANY)
 SELECT account_id, cust_id, product_cd, avail_balance
 FROM account
-WHERE avail_balance > ANY (SELECT a.avail_balance
-    FROM account a INNER JOIN individual i
-    ON a.cust_id = i.cust_id
-    WHERE i.fname = 'Frank' AND i.lname = 'Tucker'
+WHERE avail_balance > ANY (
+        SELECT a.avail_balance
+        FROM account a INNER JOIN individual i
+        ON a.cust_id = i.cust_id
+        WHERE i.fname = 'Frank' AND i.lname = 'Tucker'
+    );
+
+
+
+-- 9.8
+-- dasfdsafsdfsdfsdfsd
+SELECT account_id, product_cd, cust_id
+FROM account
+WHERE open_branch_id = (
+        SELECT branch_id
+        FROM branch
+        WHERE name = 'Woburn Branch'
+    )
+    AND open_emp_id IN (
+        SELECT emp_id
+        FROM employee
+        WHERE title = 'Teller' OR title = 'Head Teller'
+    );
+
+⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔
+-- 9.9
+-- (val, val) IN (select ...)
+SELECT account_id, product_cd, cust_id
+FROM account
+WHERE (open_branch_id, open_emp_id) IN (
+        SELECT b.branch_id, e.emp_id
+        FROM branch b
+        INNER JOIN employee e
+        ON b.branch_id = e.assigned_branch_id
+        WHERE b.name = 'Woburn Branch' AND
+            (e.title = 'Teller' OR e.title = 'Head Teller')
+    );
+
+-- 9.10
+-- Вариант без подзапросов
+SELECT a.account_id, a.product_cd, a.cust_id
+FROM account a
+INNER JOIN branch b ON a.open_branch_id = b.branch_id
+INNER JOIN employee e ON a.open_emp_id = e.emp_id
+WHERE b.name = 'Woburn Branch' AND
+    (e.title = 'Teller' OR e.title = 'Head Teller');
+
+
+
+
+⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔
+⛔                     СВЯЗАННЫЕ ПОДЗАПРОСЫ
+-- Выполняется для каждой строки содержащего выражения.
+
+
+-- 9.11
+-- Подзапрос считает кол-во счетов у каждого клиента.
+-- Затем основной запрос выбирает тех, у которых по 2 счета.
+SELECT c.cust_id, c.cust_type_cd, c.city
+FROM customer c
+WHERE 2 = (
+        SELECT COUNT(*)
+        FROM account a
+        WHERE a.cust_id = c.cust_id
+    );
+
+
+-- 9.12
+-- Находит всех клиентов, чей общий доступный остаток по всем
+-- счетам находится в диапазоне от 5000 до 10 000 долларов.
+SELECT c.cust_id, c.cust_type_cd, c.city
+FROM customer c
+WHERE (
+        SELECT SUM(a.avail_balance)
+        FROM account a
+        WHERE a.cust_id = c.cust_id
+    )
+    BETWEEN 5000 AND 10000;
+
+-- 9.13
+-- Вариант без подзапроса, запроса 9.12.
+SELECT c.cust_id, c.cust_type_cd, c.city
+FROM customer c
+INNER JOIN account a ON a.cust_id = c.cust_id
+GROUP BY a.cust_id
+HAVING SUM(a.avail_balance) BETWEEN 5000 AND 10000;
+
+
+
+
+
+
+SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance
+FROM account a
+WHERE EXISTS
+        (
+          SELECT 1
+          FROM transaction t
+          WHERE t.account_id = a.account_id
+            AND t.txn_date = '2004-06-30'
+        );
+
+
+-- Этот запрос выявляет акк-ы всех клиентов, ID которых нет в таблице business.
+SELECT a.account_id, a.product_cd, a.cust_id
+FROM account a
+WHERE NOT EXISTS
+  (
+    SELECT 1
+    FROM business b
+    WHERE b.cust_id = a.cust_id
+  );
+
+-- безопасный вариант запроса сверху
+UPDATE account a
+SET a.last_activity_date = (
+        SELECT MAX(t.txn_date)
+        FROM transaction t
+        WHERE t.account_id = a.account_id
+    )
+WHERE EXISTS (
+    SELECT 1
+    FROM transaction t
+    WHERE t.account_id = a.account_id
 );
 
 
+-- в delete нельзя использовать псевдонимы
+DELETE FROM department
+WHERE NOT EXISTS (
+        SELECT 1
+        FROM employee
+        WHERE employee.dept_id = department.dept_id
+    );
+
+
+
+
+⛔⛔⛔⛔⛔
+----------------------НЕСВЯЗАННЫЕ ПОДЗАПРОСЫ
+
+SELECT d.dept_id, d.name, e_cnt.how_many num_employees
+FROM department d
+INNER JOIN (
+        SELECT dept_id, COUNT(*) how_many
+        FROM employee
+        GROUP BY dept_id
+    ) e_cnt
+    ON d.dept_id = e_cnt.dept_id;
+-- вариант попроще, без подзапроса
+SELECT d.dept_id, d.name, COUNT(*) FROM employee e
+INNER JOIN department d ON d.dept_id = e.dept_id
+GROUP BY e.dept_id;
+
+
+
+
+SELECT `groups`.name, COUNT(*) num_customers
+FROM (
+        SELECT SUM(a.avail_balance) cust_balance
+        FROM account a
+        INNER JOIN product p ON a.product_cd = p.product_cd
+        WHERE p.product_type_cd = 'ACCOUNT'
+        GROUP BY a.cust_id
+    ) AS cust_rollup
+INNER JOIN (
+        SELECT 'Small Fry' name, 0 low_limit, 4999.99 high_limit
+        UNION ALL
+        SELECT 'Average Joes' name, 5000 low_limit, 9999.99 high_limit
+        UNION ALL
+        SELECT 'Heavy Hitters' name, 10000 low_limit, 9999999.99 high_limit
+    ) AS `groups`
+    ON cust_rollup.cust_balance BETWEEN `groups`.low_limit AND `groups`.high_limit
+GROUP BY `groups`.name;
 
 
 
 
 
+SELECT p.name product, b.name branch,
+    CONCAT(e.fname, ' ', e.lname) name,
+    SUM(a.avail_balance) tot_deposits
+FROM account a
+INNER JOIN employee e ON a.open_emp_id = e.emp_id
+INNER JOIN branch b ON a.open_branch_id = b.branch_id
+INNER JOIN product p ON a.product_cd = p.product_cd
+WHERE p.product_type_cd = 'ACCOUNT'
+GROUP BY p.name, b.name, e.fname, e.lname;
+
+
+-- как запрос выше но с подзапросом
+SELECT p.name product, b.name branch,
+    CONCAT(e.fname, ' ', e.lname) name,
+    account_groups.tot_deposits
+FROM (
+        SELECT product_cd, open_branch_id branch_id,
+            open_emp_id emp_id, SUM(avail_balance) tot_deposits
+        FROM account
+        GROUP BY product_cd, open_branch_id, open_emp_id
+    ) AS account_groups
+INNER JOIN employee e ON e.emp_id = account_groups.emp_id
+INNER JOIN branch b ON b.branch_id = account_groups.branch_id
+INNER JOIN product p ON p.product_cd = account_groups.product_cd
+WHERE p.product_type_cd = 'ACCOUNT';
 
 
 
@@ -479,10 +693,12 @@ SELECT DATE_ADD(CURRENT_DATE(), INTERVAL 5 DAY);
 
 
 
-
-
-
-☛разобрать ANY, IN, SOME
+☛разобрать ALL, ANY, IN, SOME, EXISTS
+☛ (IN)        и      (= ANY)  эквивалентны
+☛ (NOT IN)    и      (!= ALL) эквивалентны
+☛ (val, val) IN (select ...)
+☛ EXISTS - true если подзапрос возвращает хотя бы 1 строку, не важно какие столбцы,
+          (используется в связанных запросах).
 
 -- КАК ЭТО РАБОТАЕТ  ☟
 ⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔
@@ -493,4 +709,12 @@ SUM(avail_balance) tot_balance
 FROM account
 GROUP BY product_cd  , open_branch_id WITH ROLLUP;
 
+
+SELECT 'ALERT! : Account #1 Has Incorrect Balance!'
+FROM account
+WHERE (avail_balance, pending_balance) <>
+(SELECT SUM(<expression to generate available balance>),
+SUM(<expression to generate pending balance>)
+FROM transaction
+WHERE account_id = 1)
 ⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔⛔

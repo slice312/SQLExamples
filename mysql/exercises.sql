@@ -6,6 +6,7 @@ show tables
 show columns from employee  --описание таблицы
 desc bank.employee          --описание таблицы
 
+EXPLAIN --?????
 
 CAST(obj AS INT)  -- приведение типов;
 
@@ -109,7 +110,11 @@ FLUSH PRIVILEGES;
 -- Показать юзеров и их привелегии
 SELECT user FROM mysql.user;
 SHOW GRANTS FOR slice@localhost;
+
+-- Подключение JDBC на винде:
+String url = "jdbc:mysql://localhost:3306/bank?autoReconnect=true&useSSL=false";
 ---------------------------------------------------------------------------
+
 
 
 
@@ -211,7 +216,7 @@ FROM account
 GROUP BY cust_id;
 
 -- 8.2* (Мой вариант, дополнительно выводит имена владельцев)
-SELECT t.cust_id, t.fname, t.lname, t.accounts FROM(
+SELECT t.cust_id, t.fname, t.lname, t.accounts FROM (
     SELECT acc.cust_id, ind.fname fname, ind.lname lname, COUNT(*) accounts
     FROM account AS acc
     INNER JOIN individual AS ind ON acc.cust_id = ind.cust_id
@@ -232,7 +237,7 @@ GROUP BY cust_id
 HAVING accounts >= 2;
 
 -- 8.3*
-SELECT t.cust_id, t.fname, t.lname, t.accounts FROM(
+SELECT t.cust_id, t.fname, t.lname, t.accounts FROM (
     SELECT acc.cust_id, ind.fname fname, ind.lname lname, COUNT(*) accounts
     FROM account AS acc
     INNER JOIN individual AS ind ON acc.cust_id = ind.cust_id
