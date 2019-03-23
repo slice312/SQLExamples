@@ -216,18 +216,16 @@ FROM account
 GROUP BY cust_id;
 
 -- 8.2* (Мой вариант, дополнительно выводит имена владельцев)
-SELECT t.cust_id, t.fname, t.lname, t.accounts FROM (
-    SELECT acc.cust_id, ind.fname fname, ind.lname lname, COUNT(*) accounts
-    FROM account AS acc
-    INNER JOIN individual AS ind ON acc.cust_id = ind.cust_id
-    GROUP BY acc.cust_id
-    UNION
-    SELECT acc.cust_id, ofc.fname fname, ofc.lname lname, COUNT(*) accounts
-    FROM account AS acc
-    INNER JOIN officer AS ofc ON acc.cust_id = ofc.cust_id
-    GROUP BY acc.cust_id
-) AS t
-ORDER BY t.accounts;
+SELECT a.cust_id id, i.fname fname, i.lname lname, COUNT(*) accounts
+FROM account AS a
+  INNER JOIN individual AS i ON a.cust_id = i.cust_id
+GROUP BY a.cust_id
+UNION
+SELECT a.cust_id, o.fname fname, o.lname lname, COUNT(*) accounts
+FROM account AS a
+  INNER JOIN officer AS o ON a.cust_id = o.cust_id
+GROUP BY a.cust_id, o.fname, o.lname
+ORDER BY id;
 
 
 -- 8.3
@@ -237,16 +235,17 @@ GROUP BY cust_id
 HAVING accounts >= 2;
 
 -- 8.3*
-SELECT t.cust_id, t.fname, t.lname, t.accounts FROM (
-    SELECT acc.cust_id, ind.fname fname, ind.lname lname, COUNT(*) accounts
-    FROM account AS acc
-    INNER JOIN individual AS ind ON acc.cust_id = ind.cust_id
-    GROUP BY acc.cust_id
-    UNION
-    SELECT acc.cust_id, ofc.fname fname, ofc.lname lname, COUNT(*) accounts
-    FROM account AS acc
-    INNER JOIN officer AS ofc ON acc.cust_id = ofc.cust_id
-    GROUP BY acc.cust_id
+SELECT t.cust_id, t.fname, t.lname, t.accounts
+FROM (
+  SELECT a.cust_id, i.fname fname, i.lname lname, COUNT(*) accounts
+  FROM account AS a
+    INNER JOIN individual AS i ON a.cust_id = i.cust_id
+  GROUP BY a.cust_id
+  UNION
+  SELECT a.cust_id, o.fname fname, o.lname lname, COUNT(*) accounts
+  FROM account AS a
+    INNER JOIN officer AS o ON a.cust_id = o.cust_id
+  GROUP BY a.cust_id, o.fname, o.lname
 ) AS t
 WHERE t.accounts >= 2
 ORDER BY t.accounts;
