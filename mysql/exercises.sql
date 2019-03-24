@@ -11,6 +11,11 @@ EXPLAIN --?????
 CAST(obj AS INT)  -- приведение типов;
 
 
+COALESCE(args...) -- возвращает первый не null аргумент;
+IFNULL(obj, alternative) -- если obj null, возвращает 2-ой параметр alternative;
+
+
+
 --------------------------------NUMBER FUNCTIONS-----------------------------------------
 MOD(float N, float M) -- остаток от деления N на M;
 POW(float N, float M) -- возведение в степень;
@@ -83,10 +88,10 @@ COUNT(), SUM(), MIN(), MAX(), AVG()
 ----------------------------------- SAMPLES-------------------------------
 -- Показать FK ограничения таблицы:
 SELECT CONSTRAINT_NAME, TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME,
-    REFERENCED_COLUMN_NAME
+  REFERENCED_COLUMN_NAME
 FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE REFERENCED_TABLE_SCHEMA = 'bank' AND 
-    (REFERENCED_TABLE_NAME = 'employee' OR TABLE_NAME = 'employee');
+WHERE REFERENCED_TABLE_SCHEMA = 'bank' 
+  AND (REFERENCED_TABLE_NAME = 'employee' OR TABLE_NAME = 'employee');
 
 
 -- Показать комментарий к таблице:
@@ -122,6 +127,9 @@ String url = "jdbc:mysql://localhost:3306/bank?autoReconnect=true&useSSL=false";
 
 
 -- Упражнения из "Алан Бьюли - Изучаем SQL (2007)":
+
+/*----------------------3 ГЛАВА--------------------*/
+
 -- 3.1
 SELECT emp_id, fname, lname FROM employee ORDER BY lname, fname;
 
@@ -140,6 +148,8 @@ WHERE p.product_type_cd = 'ACCOUNT';
 
 
 
+/*----------------------4 ГЛАВА--------------------*/
+
 -- 4.3
 SELECT * FROM account WHERE YEAR(open_date) = 2002;
 SELECT * FROM account WHERE open_date BETWEEN '2002-01-01' AND '2002-12-31';
@@ -150,25 +160,29 @@ SELECT * FROM individual WHERE lname REGEXP '^.a.*e';
 
 
 
+/*----------------------5 ГЛАВА--------------------*/
+
 -- 5.1
 SELECT e.emp_id, e.fname, e.lname, b.name
 FROM employee e 
-INNER JOIN branch b ON e.assigned_branch_id = b.branch_id;
+  INNER JOIN branch b ON e.assigned_branch_id = b.branch_id;
 
 -- 5.2
 SELECT a.account_id, c.fed_id, p.name product_name
 FROM account a
-INNER JOIN customer c ON a.cust_id = c.cust_id
-INNER JOIN product p ON a.product_cd = p.product_cd
+  INNER JOIN customer c ON a.cust_id = c.cust_id
+  INNER JOIN product p ON a.product_cd = p.product_cd
 WHERE c.cust_type_cd = 'I';
 
 -- 5.3
 SELECT e1.emp_id, e1.fname, e1.lname
 FROM employee e1
-INNER JOIN employee e2 ON e1.superior_emp_id = e2.emp_id
+  INNER JOIN employee e2 ON e1.superior_emp_id = e2.emp_id
 WHERE e1.dept_id != e2.dept_id;
 
 
+
+/*----------------------6 ГЛАВА--------------------*/
 
 -- 6.1
 /*
@@ -194,6 +208,8 @@ ORDER BY lname;
 
 
 
+/*----------------------7 ГЛАВА--------------------*/
+
 -- 7.1
 SELECT SUBSTR('Please find the substring in this string', 17, 9);
 SELECT POSITION('substring' IN 'Please find the substring in this string');
@@ -207,10 +223,17 @@ SELECT EXTRACT(MONTH FROM CURRENT_DATE());
 
 
 
+
+
+/*----------------------8 ГЛАВА--------------------*/
+
 -- 8.1
+-- Создайте запрос для подсчета числа строк в таблице account.
 SELECT COUNT(*) `rows` FROM account;
 
 -- 8.2
+-- Измените свой запрос из упражнения 8.1 для подсчета числа счетов,
+-- имеющихся у каждого клиента. Для каждого клиента выведите ID клиента и количество счетов.
 SELECT cust_id, COUNT(*) accounts
 FROM account
 GROUP BY cust_id;
@@ -229,6 +252,8 @@ ORDER BY id;
 
 
 -- 8.3
+-- Измените запрос из упражнения 8.2 так, чтобы в результирующий набор
+-- были включены только клиенты, имеющие не менее двух счетов.
 SELECT cust_id, COUNT(*) accounts
 FROM account
 GROUP BY cust_id
@@ -252,34 +277,104 @@ ORDER BY t.accounts;
 
 
 -- 8.4
+-- Найдите общий доступный остаток по типу счетов и отделению, где
+-- на каждый тип и отделение приходится более одного счета.
+-- Результаты должны быть упорядочены по общему остатку 
+-- (от наибольшего к наименьшему).
 SELECT a.product_cd, b.name branch, SUM(a.avail_balance) balance
 FROM account AS a
-INNER JOIN branch AS b ON a.open_branch_id = b.branch_id
+  INNER JOIN branch AS b ON a.open_branch_id = b.branch_id
 GROUP BY a.product_cd, a.open_branch_id
 HAVING COUNT(*) > 1
 ORDER BY balance DESC;
 
 
 
--- НЕ ПРОВЕРЕНО 🡇🡇🡇
+
+
+/*----------------------9 ГЛАВА--------------------*/
 
 -- 9.1
-SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance FROM account AS a
-WHERE a.product_cd IN (SELECT product_cd FROM product
-    WHERE product_type_cd = 'LOAN');
+-- Создайте запрос к таблице account, использующий условие фильтрации
+-- с несвязанным подзапросом к таблице product для поиска всех кредитных
+-- счетов (product.product_type_cd = 'LOAN'). Должны быть выбраны 
+-- ID счета, код счета, ID клиента и доступный остаток.
+SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance
+FROM account AS a
+WHERE product_cd IN (
+    SELECT product_cd
+    FROM  product
+    WHERE product_type_cd = 'LOAN'
+  );
+
 
 -- 9.2
-SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance FROM account AS a
-WHERE 'LOAN' = (SELECT product_type_cd FROM product AS p
-    WHERE p.product_cd = a.product_cd);
+-- Переработайте запрос из упражнения 9.1, используя связанный подзапрос
+-- к таблице product для получения того же результата.
+SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance 
+FROM account AS a
+WHERE 'LOAN' = (
+    SELECT product_type_cd 
+    FROM product AS p
+    WHERE a.product_cd = p.product_cd
+  );
+
+-- 9.2.1
+SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance
+FROM account AS a
+WHERE EXISTS (
+    SELECT 1 FROM product AS p
+    WHERE a.product_cd = p.product_cd
+      AND p.product_type_cd = 'LOAN'
+  );
 
 
--- 9.3 (НЕ СМОГ СДЕЛАТЬ С ПОДЗАПРОСОМ)
-SELECT emp.emp_id, emp.fname, cv.name FROM employee AS emp
-INNER JOIN
-(SELECT 'trainee' name, '2004-01-01' start_dt, '2005-12-31' end_dt
-UNION ALL
-SELECT 'worker' name, '2002-01-01' start_dt, '2003-12-31' end_dt
-UNION ALL
-SELECT 'mentor' name, '2000-01-01' start_dt, '2001-12-31' end_dt) AS cv 
-    ON emp.start_date BETWEEN cv.start_dt and end_dt;
+
+-- 9.3
+-- Соедините следующий запрос с таблицей employee, чтобы показать
+-- уровень квалификации каждого сотрудника.
+SELECT e.emp_id, CONCAT(e.fname, ' ', e.lname) name,
+  (
+    SELECT level.name
+    FROM (
+        SELECT 'trainee ' name, '2004-01-01' start_dt, '2005-12-31' end_dt
+        UNION ALL
+        SELECT 'worker ' name, '2002-01-01' start_dt, '2003-12-31' end_dt
+        UNION ALL
+        SELECT 'mentor ' name, '2000-01-01' start_dt, '2001-12-31' end_dt
+      ) AS level
+    WHERE e.start_date BETWEEN  level.start_dt AND level.end_dt
+  ) AS 'level'
+FROM employee AS e;
+
+-- 9.3.1
+SELECT e.emp_id, CONCAT(e.fname, ' ', e.lname) name, level.name 'level'
+FROM employee AS e
+  INNER JOIN (
+      SELECT 'trainee' name, '2004-01-01' start_dt, '2005-12-31' end_dt
+      UNION ALL
+      SELECT 'worker' name, '2002-01-01' start_dt, '2003-12-31' end_dt
+      UNION ALL
+      SELECT 'mentor' name, '2000-01-01' start_dt, '2001-12-31' end_dt
+    ) AS level
+    ON e.start_date BETWEEN level.start_dt and end_dt;
+
+
+
+-- 9.4
+-- Создайте запрос к таблице employee для получения ID, имени и фамилии
+-- сотрудника вместе с названиями отдела и отделения, к которым
+-- он приписан. Не используйте соединение таблиц.
+SELECT e.emp_id, CONCAT(e.fname, ' ', e.lname) name,
+  (
+    SELECT d.name
+    FROM department AS d
+    WHERE e.dept_id = d.dept_id
+  ) AS 'department',
+
+  (
+    SELECT b.name
+    FROM branch AS b
+    WHERE e.assigned_branch_id = b.branch_id
+  ) AS 'branch'
+FROM employee AS e;
