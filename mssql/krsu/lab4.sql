@@ -1,12 +1,12 @@
-USE krsu_3
+USE krsu_3;
 
 -- 1
 -- Вывести данные (наименование и цену) 10 самых дорогих напитков.
 SELECT TOP(10) p.НаимСырья, p.ЦенаСырья 
 FROM Сырье AS p
-INNER JOIN Типы_сырья AS t ON p.КодТипаСырья = t.КодТипаСырья
+  INNER JOIN Типы_сырья AS t ON p.КодТипаСырья = t.КодТипаСырья
 WHERE t.НаимТипаСырья = 'Напитки'
-ORDER BY p.ЦенаСырья DESC
+ORDER BY p.ЦенаСырья DESC;
 
 
 -- 1.1
@@ -16,7 +16,7 @@ WHERE КодТипаСырья IN (
     SELECT КодТипаСырья FROM Типы_сырья
     WHERE НаимТипаСырья = 'Напитки'
   )
-ORDER BY ЦенаСырья DESC
+ORDER BY ЦенаСырья DESC;
 
 
 
@@ -26,29 +26,29 @@ ORDER BY ЦенаСырья DESC
 -- сырья, измеряемого штуками.
 SELECT m.НаимСырья, m.ЦенаСырья, m.КодЕдИзм
 FROM Сырье AS m
-INNER JOIN Ед_изм AS e ON m.КодЕдИзм = e.КодЕдИзм
-  AND e.НаимЕдИзм != 'Шт.' 
+  INNER JOIN Ед_изм AS e ON m.КодЕдИзм = e.КодЕдИзм
+    AND e.НаимЕдИзм != 'Шт.' 
 WHERE m.ЦенаСырья > ALL (
     SELECT p.ЦенаСырья 
     FROM Сырье AS p
-    INNER JOIN Ед_изм AS ee ON p.КодЕдИзм = ee.КодЕдИзм
-      AND ee.НаимЕдИзм = 'Шт.'
+      INNER JOIN Ед_изм AS ee ON p.КодЕдИзм = ee.КодЕдИзм
+        AND ee.НаимЕдИзм = 'Шт.'
   )
-ORDER BY m.ЦенаСырья DESC
+ORDER BY m.ЦенаСырья DESC;
 
 
 -- 2.1
 SELECT m.НаимСырья, m.ЦенаСырья, m.КодЕдИзм
 FROM Сырье AS m
-INNER JOIN Ед_изм AS e ON m.КодЕдИзм = e.КодЕдИзм
-  AND e.НаимЕдИзм != 'Шт.' 
+  INNER JOIN Ед_изм AS e ON m.КодЕдИзм = e.КодЕдИзм
+    AND e.НаимЕдИзм != 'Шт.' 
 WHERE m.ЦенаСырья > ANY (
     SELECT p.ЦенаСырья 
     FROM Сырье AS p
-    INNER JOIN Ед_изм AS ee ON p.КодЕдИзм = ee.КодЕдИзм
-      AND ee.НаимЕдИзм = 'Шт.'
+      INNER JOIN Ед_изм AS ee ON p.КодЕдИзм = ee.КодЕдИзм
+        AND ee.НаимЕдИзм = 'Шт.'
   )
-ORDER BY m.ЦенаСырья DESC
+ORDER BY m.ЦенаСырья DESC;
 
 
 
@@ -56,16 +56,16 @@ ORDER BY m.ЦенаСырья DESC
 -- Вывести данные о количестве наименований напитков, измеряемых бутылками.
 SELECT COUNT(*) AS 'кол-во'
 FROM Сырье AS p
-INNER JOIN Типы_сырья AS t ON p.КодТипаСырья = t.КодТипаСырья
-INNER JOIN Ед_изм AS e ON p.КодЕдИзм = e.КодЕдИзм
-WHERE e.НаимЕдИзм = 'Бут.' AND t.НаимТипаСырья = 'Напитки'
+  INNER JOIN Типы_сырья AS t ON p.КодТипаСырья = t.КодТипаСырья
+  INNER JOIN Ед_изм AS e ON p.КодЕдИзм = e.КодЕдИзм
+WHERE e.НаимЕдИзм = 'Бут.' AND t.НаимТипаСырья = 'Напитки';
 
 
 
 -- 4
 -- Вывести данные о максимальной и средней цене продуктов,
 -- измеряемых килограммами.
-SELECT MAX(p.ЦенаСырья) AS макс, ROUND(AVG(p.ЦенаСырья), 2) AS сред
+SELECT MAX(p.ЦенаСырья) AS макс, ROUND(AVG(p.ЦенаСырья), 2) AS 'сред'
 FROM Сырье AS p
-INNER JOIN Ед_изм AS t ON p.КодЕдИзм = t.КодЕдИзм
-WHERE t.НаимЕдИзм = 'Килограмм'
+  INNER JOIN Ед_изм AS t ON p.КодЕдИзм = t.КодЕдИзм
+WHERE t.НаимЕдИзм = 'Килограмм';
