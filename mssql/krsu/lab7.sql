@@ -8,19 +8,20 @@ USE krsu_3;
 -- закупок сырья типа «Прочие» по первым субботам каждого месяца. В заголовке поля, определяющего месяц,
 -- вывести английское название месяца, дату первой субботы каждого месяца  вывести в немецком формате,
 -- значение объема выводить округленным до 2 знаков после запятой.
-SELECT  YEAR(s.Датадвижения) AS year, MONTH(s.Датадвижения) AS month, -- (s.Количество * s.Цена) AS 'объем', FORMAT(s.Датадвижения, 'dd/MM/yyyy')
-   s.Датадвижения, DATEPART(weekday, s.Датадвижения) AS weeks,  (s.Количество * s.Цена)  AS 'объем'
+set language english
+set language russian
+
+SELECT YEAR(s.Датадвижения) AS year, CONCAT(DATENAME(month, s.Датадвижения), ' 1st') AS month,
+   FORMAT(s.Датадвижения, 'dd/MM/yyyy'), ROUND(SUM(s.Количество * s.Цена), 2) as summ
 FROM Склад AS s
   INNER JOIN Сырье AS p ON s.КодСырья = p.КодСырья
 WHERE s.ПризнакДвижения = 'Поступление'
   AND p.КодТипаСырья = 10
-  AND (s.Количество * s.Цена) > 100
-  AND DATEPART(weekday, s.Датадвижения) = 7
-  AND (DATEPART(DAY, DATEDIFF(day, 0, s.Датадвижения) / 7 * 7) / 7 + 1) = 1
-GROUP BY YEAR(s.Датадвижения), MONTH(s.Датадвижения), DATEPART(weekday, s.Датадвижения),
-         (s.Количество * s.Цена)
-ORDER BY year, month;
-
+  AND DATEPART(weekday, s.Датадвижения) = 7  -- в англ. формате воскресенте 1 день недели
+  AND DAY(s.Датадвижения) <= 7
+GROUP BY YEAR(s.Датадвижения), DATEPART(month, s.Датадвижения), DATEPART(weekday, s.Датадвижения), s.Датадвижения
+HAVING  SUM(s.Количество * s.Цена) > 100
+ORDER BY year, s.Датадвижения;
 
 
 
