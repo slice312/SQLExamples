@@ -1,6 +1,14 @@
+--The standard convention in SQL Server is:
+-- PRIMARY KEY:       PK_Tablename
+-- FOREIGN KEY:       FK_ForeignKeyTable_PrimaryKeyTable
+-- UNIQUE:            UQ_TableName_ColumnName(s)
+-- CHECK CONSTRAINT:  CHK_TableName_ColumnName
+-- INDEX:             IX_TableName_Column(s)
+
+
 LEN(string) -- -> длина строки;
 CHARINDX(), -- -аналог locate и position из mysql;
-вместо CONCAT(), оператор +
+CONCAT() и оператор +
 вместо MOD(), оператор %
 POWER() -- как pow()
 
@@ -14,7 +22,7 @@ STUFF() -- как INSERT() в MySQL
 
 SUBSTR или SUBSTRING
 
-CAST()
+CAST(expression AS datatype(length))
 
 
 
@@ -24,6 +32,8 @@ dateadd()
 YEAR()
 GETDATE()
 FORMAT(date, "pattern")
+CONVERT(varchar(10), GETDATE(), 101); --101 это номер формата времени USA, 104 - немецкий
+PARSE('Friday, 20 July 2018' AS datetime2)
 datepart(week, '2019.01.12');
 
 
