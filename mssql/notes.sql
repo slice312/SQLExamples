@@ -15,6 +15,8 @@ POWER() -- как pow()
 CEILING(), FLOOR(), ROUND() -- округление 1)вверх, 2)вниз, 3)куда ближе;
 ROUND() -- с тремя аргументами как TRUNCATE() в mysql
 
+IIF()
+CHOOSE()
 
 
 REPLACE(string, string substr, string replace);
