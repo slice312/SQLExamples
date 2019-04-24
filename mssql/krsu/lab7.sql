@@ -5,8 +5,8 @@ USE krsu_3;
 -- закупок сырья типа «Прочие» по первым субботам каждого месяца. В заголовке поля, определяющего месяц,
 -- вывести английское название месяца, дату первой субботы каждого месяца вывести в немецком формате,
 -- значение объема выводить округленным до 2 знаков после запятой.
-set language russian
-set language english
+set language russian;
+set language english;
 
 SELECT YEAR(s.Датадвижения) AS 'Год',
   CONCAT(DATENAME(month, s.Датадвижения), ' 1st') AS 'Месяц',
@@ -66,13 +66,15 @@ SELECT YEAR(s.Датадвижения) AS 'Год',
 FROM Склад AS s
 WHERE s.ПризнакДвижения = 'Поступление'
   AND YEAR(s.Датадвижения) = 2002
-  AND DATENAME(month, s.Датадвижения) = 'July'
+  AND (DATENAME(month, s.Датадвижения) = 'July' 
+      OR DATENAME(month, s.Датадвижения) = 'Июль')
   AND EXISTS (
       SELECT 1 FROM Поставщики AS pr
       WHERE pr.КодПоставщика = s.КодПоставщика
         AND pr.НаимПоставщика = 'Базар'
     )
-GROUP BY YEAR(s.Датадвижения), MONTH(s.Датадвижения), DATENAME(month, s.Датадвижения), DAY(s.Датадвижения) / 7;
+GROUP BY YEAR(s.Датадвижения), MONTH(s.Датадвижения), 
+  DATENAME(month, s.Датадвижения), DAY(s.Датадвижения) / 7;
 
 
 
