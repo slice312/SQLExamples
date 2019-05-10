@@ -28,7 +28,6 @@ SELECT s.КодДвижения, st.НаимСклада AS [Склад], s.Пр
     WHEN 'Поступление' THEN pr.НаимПоставщика
     WHEN 'Выдача' THEN b.НаимПокупателя
   END AS [producer]
-  COALESCE(pr.НаимПоставщика, b.НаимПокупателя)
 FROM Склад AS s
   INNER JOIN Список_складов AS st ON s.КодСкладаДвиж = st.КодСклада
   INNER JOIN Сырье AS p ON s.КодСырья = p.КодСырья
