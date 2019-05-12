@@ -4,7 +4,7 @@ CREATE DATABASE dudes DEFAULT CHARACTER SET utf8;
 
 USE dudes;
 
-CREATE TABLE person 
+CREATE TABLE person
 (
   person_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
   fname VARCHAR(20),
@@ -59,8 +59,8 @@ VALUES (1, 'pizza'), (1, 'cookies'), (1, 'nachos');
 
 INSERT INTO person (fname, lname, gender, birth_date,
   address, city, state, country, postal_code)
-VALUES 
-  ('Susan','Smith', 'F', '1975-11-02', '23 Maple St.', 
+VALUES
+  ('Susan','Smith', 'F', '1975-11-02', '23 Maple St.',
     'Arlington', 'VA', 'USA', '20220');
 
 
@@ -69,7 +69,7 @@ UPDATE person SET address = '1225 Tremont St.', city = 'Boston',
   state = 'MA', country = 'USA', postal_code = '02138'
 WHERE person_id = 1;
 
-UPDATE person SET birth_date = '2014-02-03' 
+UPDATE person SET birth_date = '2014-02-03'
 WHERE fname = 'BoJack';
 
 -- DELETE
