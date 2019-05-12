@@ -205,7 +205,7 @@ INNER JOIN product p
 SELECT e1.fname, e1.lname, 'VS' vs, e2.fname, e2.lname
 FROM employee e1 
   INNER JOIN employee e2 ON e1.emp_id < e2.emp_id
-WHERE e1.title = 'Teller' 
+WHERE e1.title = 'Teller'
   AND e2.title = 'Teller';
 
 
@@ -277,13 +277,13 @@ GROUP BY open_emp_id;
 
 -- Можно посчитать по 1 столбцу для каждой группы, если значение
 -- столбца NULL, то не считает.
-SELECT open_emp_id, COUNT(cust_id) how_many 
+SELECT open_emp_id, COUNT(cust_id) how_many
 FROM account
 GROUP BY open_emp_id;
 
 -- Сколько счетов открыл каждый сотрудник для разных клиентов.
 -- Число уникальных значений столбца в группе.
-SELECT open_emp_id, COUNT(DISTINCT cust_id) how_many 
+SELECT open_emp_id, COUNT(DISTINCT cust_id) how_many
 FROM account
 GROUP BY open_emp_id;
 
@@ -298,7 +298,7 @@ SELECT MAX(pending_balance - avail_balance) max_uncleared FROM account;
 -- HAVING.
 -- Блок GROUP BY выполняется после WHERE, поэтому в нем нельзя использовать
 -- агрегатные функции. Для фильтрации по группам есть HAVING.
-SELECT open_emp_id, COUNT(*) how_many 
+SELECT open_emp_id, COUNT(*) how_many
 FROM account
 GROUP BY open_emp_id
 HAVING how_many > 4;
@@ -388,7 +388,7 @@ ORDER BY subordinates DESC;
 
 -- скалярный   - возвращает 1 строку и 1 столбец;
 -- список      - 1 столбец  и больше 1 строки;
--- кортеж      - 1 строку   и больше 1 столбца; 
+-- кортеж      - 1 строку   и больше 1 столбца;
 -- таблица     - больше 1 строки и больше 1 столбца;
 
 
@@ -470,7 +470,7 @@ SELECT account_id, cust_id, product_cd, avail_balance
 FROM account
 WHERE avail_balance > ANY (
     SELECT a.avail_balance
-    FROM account AS a 
+    FROM account AS a
       INNER JOIN individual AS i ON a.cust_id = i.cust_id
     WHERE i.fname = 'Frank' AND i.lname = 'Tucker'
   );
@@ -505,7 +505,7 @@ WHERE (open_branch_id, open_emp_id) IN (
     SELECT b.branch_id, e.emp_id
     FROM branch AS b
       INNER JOIN employee AS e ON b.branch_id = e.assigned_branch_id
-    WHERE b.name = 'Woburn Branch' 
+    WHERE b.name = 'Woburn Branch'
       AND (e.title = 'Teller' OR e.title = 'Head Teller')
   );
 
@@ -591,7 +591,7 @@ WHERE NOT EXISTS (
 
 -- ⛔9.16
 -- В дату последней активности счета устанавливается дата последней (по времени)
--- транзакции. Проверка нужна на тот случай если нет никаких транзакций для 
+-- транзакции. Проверка нужна на тот случай если нет никаких транзакций для
 -- определенного счета, иначе установится null.
 UPDATE account a
 SET a.last_activity_date = (
@@ -664,7 +664,7 @@ FROM (
     WHERE p.product_type_cd = 'ACCOUNT'
     GROUP BY a.cust_id
   ) AS cust_rollup
-  
+
   INNER JOIN (
       SELECT 'Small Fry' name, 0 low_limit, 4999.99 high_limit
       UNION ALL
@@ -728,7 +728,7 @@ HAVING COUNT(*) > (
 
 -- 9.22
 -- Скалярные запросы можно использовать в блоке SELECT.
--- Вариант запроса 9.20.1, но тут есть ошибка. 
+-- Вариант запроса 9.20.1, но тут есть ошибка.
 -- Первый подзапрос возвращает null.
 SELECT (
     SELECT p.name

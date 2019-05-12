@@ -1,0 +1,92 @@
+INFO
+
+-------------------------------------------------------------------------------
+
+
+
+
+SET key value
+GET key
+DEL key1 key2 key3 ...
+
+
+INCR                 increment
+DECR                 decrement
+
+INCRBY
+DECRBY
+
+
+TYPE                        - тип значения по ключу;
+
+
+KEYS *                                  - показать все ключи;
+FLUSHALL                                - удалить все ключи;
+
+
+MSET    key value [key value ...]         - multiple set;
+
+SETNX   key value                       - устанавливает если ключ не существует;
+
+
+
+
+
+SETEX   key seconds value                 - устанавливает ключ на указанное кол-во секунд, потом будет удален;
+EXPIRE  key seconds                      - назначет ключу время жизни;
+PSETEX
+TTL     key                                 - возвращает сколько осталось "жить" ключу;
+
+
+
+
+
+
+APPEND
+STRLEN  key                            - длина строки, хранящейся по ключу;
+
+
+
+
+-------------------------------HASHES-----------------------------
+
+HMSET
+HMGET                  - multiple HGET
+HGET
+HGETALL
+HEXISTS
+HDEL
+HSETNX                   - if field doesn't exists;
+HKEYS
+HVALS
+
+
+HLEN
+
+HINCRBY
+
+
+
+
+---------------------------LISTS----------------------------------
+
+LPUSH
+RPUSH
+
+LPUSHX            - push if key exists
+
+LPOP
+RPOP
+
+
+
+LRANGE            - list range   (индексы 0 -1  показать весь лист)
+LLEN              - list length
+LINDEX            - list index
+LSET              - list set
+LINSERT
+
+
+
+
+-------------------------- SETS-----------------------------------

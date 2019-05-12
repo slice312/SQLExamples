@@ -90,7 +90,7 @@ COUNT(), SUM(), MIN(), MAX(), AVG()
 SELECT CONSTRAINT_NAME, TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME,
   REFERENCED_COLUMN_NAME
 FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE REFERENCED_TABLE_SCHEMA = 'bank' 
+WHERE REFERENCED_TABLE_SCHEMA = 'bank'
   AND (REFERENCED_TABLE_NAME = 'employee' OR TABLE_NAME = 'employee');
 
 
@@ -279,7 +279,7 @@ ORDER BY t.accounts;
 -- 8.4
 -- Найдите общий доступный остаток по типу счетов и отделению, где
 -- на каждый тип и отделение приходится более одного счета.
--- Результаты должны быть упорядочены по общему остатку 
+-- Результаты должны быть упорядочены по общему остатку
 -- (от наибольшего к наименьшему).
 SELECT a.product_cd, b.name branch, SUM(a.avail_balance) balance
 FROM account AS a
@@ -297,7 +297,7 @@ ORDER BY balance DESC;
 -- 9.1
 -- Создайте запрос к таблице account, использующий условие фильтрации
 -- с несвязанным подзапросом к таблице product для поиска всех кредитных
--- счетов (product.product_type_cd = 'LOAN'). Должны быть выбраны 
+-- счетов (product.product_type_cd = 'LOAN'). Должны быть выбраны
 -- ID счета, код счета, ID клиента и доступный остаток.
 SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance
 FROM account AS a
@@ -311,10 +311,10 @@ WHERE product_cd IN (
 -- 9.2
 -- Переработайте запрос из упражнения 9.1, используя связанный подзапрос
 -- к таблице product для получения того же результата.
-SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance 
+SELECT a.account_id, a.product_cd, a.cust_id, a.avail_balance
 FROM account AS a
 WHERE 'LOAN' = (
-    SELECT product_type_cd 
+    SELECT product_type_cd
     FROM product AS p
     WHERE a.product_cd = p.product_cd
   );
