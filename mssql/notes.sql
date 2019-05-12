@@ -17,7 +17,9 @@ ROUND() -- с тремя аргументами как TRUNCATE() в mysql
 
 IIF()
 CHOOSE()
-
+ISNULL(expression, raplacement)
+NULLIF(expression1, expression2)
+COALESCE(val1, val2, ...)  -- returns the first non-null value in a list
 
 REPLACE(string, string substr, string replace);
 STUFF() -- как INSERT() в MySQL
@@ -82,3 +84,13 @@ WHERE object_id = (
 
 --как в MySQL: show tables
 SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'
+
+
+-- проверить таблицу (IF EXISTS)
+SELECT *
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'dbo'
+AND  TABLE_NAME = 'Склад'
+
+-- или можно так
+IF (OBJECT_ID('Сырье_1') IS NOT NULL)
