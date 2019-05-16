@@ -120,3 +120,11 @@ WHILE (@leftAVG > @rightAVG)
 
 PRINT CONCAT('count = ', @count)
 GO
+
+
+SELECT p.НаимСырья, type.НаимТипаСырья
+FROM dbo.Сырье_1 AS p
+  INNER JOIN dbo.Типы_сырья AS type ON p.КодТипаСырья = type.КодТипаСырья
+WHERE type.НаимТипаСырья = 'Посуда'
+  OR type.НаимТипаСырья = 'Прочие'
+GO
