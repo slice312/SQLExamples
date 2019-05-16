@@ -56,10 +56,10 @@ BEGIN
   SET СтоимостьДоставки = СтоимостьДоставки + СтоимостьДоставки * @percent
   WHERE КодЗаказа IN (
       SELECT o.КодЗаказа
-	  FROM dbo.Заказы_1 AS o
-	    INNER JOIN dbo.Доставка AS n ON o.Доставка = n.КодДоставки
-	  WHERE (o.ДатаИсполнения BETWEEN @startdate AND @enddate)
-	    AND n.Название = @name  	
+      FROM dbo.Заказы_1 AS o
+        INNER JOIN dbo.Доставка AS n ON o.Доставка = n.КодДоставки
+      WHERE (o.ДатаИсполнения BETWEEN @startdate AND @enddate)
+        AND n.Название = @name      
     )
   
   SET @rowcount = @@ROWCOUNT
@@ -70,10 +70,10 @@ BEGIN
   FROM dbo.Заказы_1 AS o
   WHERE КодЗаказа IN (
       SELECT o.КодЗаказа 
-	  FROM dbo.Заказы_1 AS o
-	    INNER JOIN dbo.Доставка AS n ON o.Доставка = n.КодДоставки
-	  WHERE (o.ДатаИсполнения BETWEEN @startdate AND @enddate)
-	    AND n.Название = @name  	
+      FROM dbo.Заказы_1 AS o
+        INNER JOIN dbo.Доставка AS n ON o.Доставка = n.КодДоставки
+      WHERE (o.ДатаИсполнения BETWEEN @startdate AND @enddate)
+        AND n.Название = @name      
     )
 END
 GO
@@ -102,7 +102,7 @@ BEGIN
   SELECT o.КодЗаказа,
     CONVERT(varchar, o.ДатаИсполнения, 104) AS [ДатаИсполнения],
     prod.Марка,
-	prod.Цена - prod.Цена * done.Скидка AS [со скидкой]
+    prod.Цена - prod.Цена * done.Скидка AS [со скидкой]
   FROM dbo.Заказы AS o
     INNER JOIN dbo.Заказано AS done ON o.КодЗаказа = done.КодЗаказа
     INNER JOIN dbo.Товары AS prod ON done.КодТовара = prod.КодТовара
@@ -157,4 +157,3 @@ END TRY
 BEGIN CATCH
     PRINT 'cathc'
 END CATCH
-
