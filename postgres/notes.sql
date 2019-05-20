@@ -5,7 +5,7 @@ psql -h localhost -d database -U username     -- connect via terminal;
 \c DBname             - connect DB (like 'use' in MySQL)
 \l                    - show databases;
 \dn                   - show schemas;
-\dt                   - show tables;
+\dt   или \d          - show tables;
 \d или \d+ tablename  - describe table;
 \du                   - show users and roles;
 \s file               - save history on file;
@@ -23,9 +23,6 @@ CTRL + C              - cancel input query;
 SELECT * FROM pg_timezone_names; -- показать всем таймзоны%
 
 
-
-COALESCE --????
-
 SELECT VERSION(), NOW();
 
 CREATE USER username WITH PASSWORD 'qwerty123'; -- new user;
@@ -38,8 +35,8 @@ CREATE DATABASE test OWNER 'slice' ENCODING = 'UTF8'
   LC_COLLATE = 'en_US.UTF8'  LC_CTYPE = 'en_US.UTF8' template template0;
 DROP DATABASE test;
 
-
-
+-- Выполнить sql-скрипт
+-- psql -f demo_small.sql -U postgres > demo.log 2>demo.err
 
 
 SELECT pid, usename, state FROM pg_stat_activity;   -- показать выполняющиеся запросы
@@ -56,6 +53,9 @@ E'pgday\'17'  - строка в стиле Си;
 
 Привидение типов (CAST и ::)
 CAST ('10.2' AS DOUBLE PRECISION);
+
+pg_typeof(current_date);
+
 
 '01-OCT-2015'::DATE;
 '100'::INTEGER;
