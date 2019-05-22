@@ -5,23 +5,26 @@ GO
 -- Cоздать функцию, определяющую для заданного месяца заданного года
 -- максимальный объем поставки одним внешним поставщиком.
 CREATE FUNCTION dbo.MaxDeliveryVolume(@month int, @year int)
-RETURNS real
+RETURNS decimal(20, 8)
 AS
 BEGIN
-  DECLARE @ret real;
-  SET @ret = (SELECT MAX(st.Цена * st.Количество) AS vol
-    FROM dbo.Склад AS st
-    WHERE st.ПризнакДвижения = 'Поступление'
-     AND DATEPART(month, st.Датадвижения) = @month
-     AND DATEPART(year, st.Датадвижения) = @year);
-
-  IF (@ret IS NULL)
-    SET @ret = 0.0;
+  DECLARE @ret decimal(20, 8);
+  SET @ret = (
+      SELECT MAX(t.vol)
+      FROM (
+          SELECT SUM((st.Цена * st.Количество)) AS vol
+          FROM dbo.Склад AS st
+          WHERE st.ПризнакДвижения = 'Поступление'
+            AND DATEPART(month, st.Датадвижения) = @month
+            AND DATEPART(year, st.Датадвижения) = @year
+          GROUP BY st.КодПоставщика
+        ) AS t
+    );
   RETURN @ret;
 END;
 GO
 
-PRINT dbo.MaxDeliveryVolume(11, 2002);
+PRINT dbo.MaxDeliveryVolume(7, 2002);
 GO
 
 
@@ -38,20 +41,17 @@ BEGIN
   SELECT @name = supplier.НаимПоставщика
   FROM dbo.Склад AS st
     INNER JOIN dbo.Поставщики AS supplier ON st.КодПоставщика = supplier.КодПоставщика
+  WHERE st.ПризнакДвижения = 'Поступление'
+    AND DATEPART(month, st.Датадвижения) = @month
+    AND DATEPART(year, st.Датадвижения) = @year
   GROUP BY supplier.НаимПоставщика
-  HAVING CAST(MAX(st.Цена * st.Количество) AS decimal(19, 4)) = (
-      SELECT CAST(MAX(Цена * Количество) AS decimal(19, 4))
-      FROM dbo.Склад
-      WHERE ПризнакДвижения = 'Поступление'
-        AND DATEPART(month, Датадвижения) = @month
-        AND DATEPART(year, Датадвижения) = @year
-    );
+  HAVING CAST(SUM(st.Цена * st.Количество) AS decimal(20, 8)) = dbo.MaxDeliveryVolume(@month, @year);
 
   RETURN @name;
 END;
 GO
 
-PRINT dbo.BestSupplier(11, 2002);
+PRINT dbo.BestSupplier(7, 2002);
 GO
 
 
@@ -74,9 +74,8 @@ AS
     AND type.НаимТипаСырья = @typename
     AND DATEPART(month, st.Датадвижения) = @month
     AND DATEPART(year, st.Датадвижения) = @year
-    AND CAST(st.Цена * st.Количество AS money) >= @minvolume
-  GROUP BY supl.КодПоставщика, supl.НаимПоставщика);
+  GROUP BY supl.КодПоставщика, supl.НаимПоставщика
+  HAVING SUM(CAST(st.Цена * st.Количество AS money)) >= @minvolume);
 GO
-
-SELECT * FROM dbo.FOOOO(DEFAULT, DEFAULT, 11, 2002);
+SELECT * FROM dbo.GetSuppliers('Напитки', 1500, 7, 2002);
 GO
