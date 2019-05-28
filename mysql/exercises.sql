@@ -6,6 +6,8 @@ show tables
 show columns from employee  --описание таблицы
 desc bank.employee          --описание таблицы
 
+
+
 EXPLAIN --?????
 
 CAST(obj AS INT)  -- приведение типов;
@@ -98,6 +100,13 @@ WHERE REFERENCED_TABLE_SCHEMA = 'bank'
 SELECT TABLE_COMMENT
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_SCHEMA = 'bank' AND TABLE_NAME = 'individual';
+
+
+--Размеры баз
+SELECT table_schema "DB Name",
+        ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) "DB Size in MB" 
+FROM information_schema.tables 
+GROUP BY table_schema; 
 
 
 
