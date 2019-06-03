@@ -43,8 +43,8 @@ BEGIN
 
   UPDATE dbo.Заказы_1
   SET СтоимостьДоставки = СтоимостьДоставки + СтоимостьДоставки * @percent
-  OUTPUT INSERTED.КодЗаказа, ROUND(INSERTED.СтоимостьДоставки, 2) AS [СтоимостьДоставки],
-    CONVERT(varchar, INSERTED.ДатаИсполнения, 104) AS [ДатаИсполнения]
+  OUTPUT inserted.КодЗаказа, ROUND(inserted.СтоимостьДоставки, 2) AS [СтоимостьДоставки],
+    CONVERT(varchar, inserted.ДатаИсполнения, 104) AS [ДатаИсполнения]
   WHERE КодЗаказа IN (
       SELECT o.КодЗаказа
       FROM dbo.Заказы_1 AS o
