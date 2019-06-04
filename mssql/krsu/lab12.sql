@@ -27,6 +27,10 @@ BEGIN
 END;
 GO
 
+INSERT INTO dbo.Клиенты_1 (КодКлиента, Название)
+VALUES ('ALFNI', 'Sun');
+GO
+
 
 
 -- 1.2
@@ -34,12 +38,16 @@ GO
 -- Условием запрета на удаление является принадлежность клиента стране Италия.
 CREATE TRIGGER TR_Клиенты_1__Delete
 ON dbo.Клиенты_1
-AFTER DELETE
+INSTEAD OF DELETE
 AS
-IF EXISTS(SELECT 1 FROM deleted WHERE deleted.Страна = 'Италия')
 BEGIN
-  RAISERROR('Запрет на удаление, Страна = ''Италия''', 1, 16);
-  ROLLBACK TRANSACTION;
+  IF ((SELECT COUNT(Страна) FROM deleted WHERE Страна = 'Италия') > 0)
+  BEGIN
+    RAISERROR('Запрет на удаление, Страна = ''Италия''', 1, 16);
+    ROLLBACK TRANSACTION;
+  END
+  ELSE
+    DELETE dbo.Клиенты_1 WHERE Клиент_Id IN (SELECT Клиент_Id FROM deleted);
 END;
 GO
 
@@ -53,7 +61,7 @@ GO
 -- Запретить изменение любых данных, касающихся главных менеджеров.
 CREATE TRIGGER TR_Клиенты_1__Update
 ON dbo.Клиенты_1
-INSTEAD OF UPDATE
+AFTER UPDATE
 AS
 IF EXISTS(SELECT 1 FROM deleted WHERE deleted.Должность = 'Главный менеджер')
 BEGIN
@@ -65,11 +73,11 @@ GO
 
 UPDATE dbo.Клиенты_1
 SET ОбращатьсяК = 'Sun'
-WHERE Должность = 'Главный менеджер';
+WHERE Должность = 7;
 
 UPDATE dbo.Клиенты_1
 SET ОбращатьсяК = 'Sun'
-WHERE Должность = 'Продавец';
+WHERE Клиент_Id = 4;
 GO
 
 

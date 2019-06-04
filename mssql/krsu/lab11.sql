@@ -77,5 +77,6 @@ AS
   GROUP BY supl.КодПоставщика, supl.НаимПоставщика
   HAVING SUM(CAST(st.Цена * st.Количество AS money)) >= @minvolume);
 GO
-SELECT * FROM dbo.GetSuppliers('Напитки', 1500, 7, 2002);
+
+SELECT * FROM dbo.GetSuppliers(DEFAULT, 1500, 7, 2002);
 GO
