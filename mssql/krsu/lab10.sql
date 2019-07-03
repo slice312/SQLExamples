@@ -73,15 +73,15 @@ CREATE PROC dbo.totalSum
 AS
 BEGIN
   SELECT o.КодЗаказа,
-    CONVERT(varchar, o.ДатаИсполнения, 104) AS [ДатаИсполнения],
     prod.Марка,
-    prod.Цена - prod.Цена * done.Скидка AS [со скидкой]
+   SUM( prod.Цена - prod.Цена * done.Скидка )AS [со скидкой]
   FROM dbo.Заказы AS o
     INNER JOIN dbo.Заказано AS done ON o.КодЗаказа = done.КодЗаказа
     INNER JOIN dbo.Товары AS prod ON done.КодТовара = prod.КодТовара
     INNER JOIN dbo.Клиенты AS client ON o.Клиент_ID = client.Клиент_Id
   WHERE client.КодКлиента = @clienCode
-    AND (o.ДатаРазмещения BETWEEN @startdate and @enddate);
+    AND (o.ДатаРазмещения BETWEEN @startdate and @enddate)
+  GROUP BY ROLLUP(o.КодЗаказа, prod.Марка);
 
   SELECT @sumCost = SUM(prod.Цена - prod.Цена * done.Скидка)
   FROM dbo.Заказы AS o
@@ -125,34 +125,4 @@ GO
 DECLARE @cost decimal(19, 4) = 0.0;
 EXEC dbo.totalSum 'BERGS', '1993-03-07', '1994-03-07', @cost OUTPUT;
 PRINT CONCAT('Общая сумма = ', @cost);
-GO
-----------------------------------------------------------------------------------------------
-
-
-ALTER PROC dbo.totalSum
-  @clienCode nvarchar(5),
-  @startdate date,
-  @enddate date,
-  @sumCost decimal(19, 4) OUTPUT
-AS
-BEGIN
-  SELECT o.КодЗаказа,
-    prod.Марка,
-   SUM( prod.Цена - prod.Цена * done.Скидка )AS [со скидкой]
-  FROM dbo.Заказы AS o
-    INNER JOIN dbo.Заказано AS done ON o.КодЗаказа = done.КодЗаказа
-    INNER JOIN dbo.Товары AS prod ON done.КодТовара = prod.КодТовара
-    INNER JOIN dbo.Клиенты AS client ON o.Клиент_ID = client.Клиент_Id
-  WHERE client.КодКлиента = @clienCode
-    AND (o.ДатаРазмещения BETWEEN @startdate and @enddate)
-  GROUP BY ROLLUP(o.КодЗаказа, prod.Марка);
-
-  SELECT @sumCost = SUM(prod.Цена - prod.Цена * done.Скидка)
-  FROM dbo.Заказы AS o
-    INNER JOIN dbo.Заказано AS done ON o.КодЗаказа = done.КодЗаказа
-    INNER JOIN dbo.Товары AS prod ON done.КодТовара = prod.КодТовара
-    INNER JOIN dbo.Клиенты AS client ON o.Клиент_ID = client.Клиент_Id
-  WHERE client.КодКлиента = @clienCode
-    AND (o.ДатаРазмещения BETWEEN @startdate and @enddate);
-END;
 GO

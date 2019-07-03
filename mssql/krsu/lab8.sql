@@ -71,6 +71,6 @@ FROM dbo.Склад AS s
 WHERE s.ПризнакДвижения = 'Поступление'
   AND t.НаимТипаСырья = 'Прочие'
   AND YEAR(s.Датадвижения) = 2002
-  AND (DATENAME(weekday, s.Датадвижения) = 'СУббота'
+  AND (DATENAME(weekday, s.Датадвижения) = 'Суббота'
       OR DATENAME(weekday, s.Датадвижения) = 'Saturday')
 GROUP BY prod.НаимПоставщика;

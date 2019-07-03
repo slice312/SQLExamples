@@ -8,8 +8,8 @@
 
 LEN(string) -- -> длина строки;
 CHARINDX(), -- -аналог locate и position из mysql;
-CONCAT() и оператор +
-вместо MOD(), оператор %
+CONCAT(), CONCAT_WS(), operator +
+вместо MOD(), operator %
 POWER() -- как pow()
 
 CEILING(), FLOOR(), ROUND() -- округление 1)вверх, 2)вниз, 3)куда ближе;
@@ -27,8 +27,9 @@ STUFF() -- как INSERT() в MySQL
 SUBSTR или SUBSTRING
 
 CAST(expression AS datatype(length))
+TRY_CAST()
 
-
+waitfor delay '00:00:05'   - задержка 5 секунд.
 
 getutcdate() 
 current_timestamp() 
@@ -37,6 +38,7 @@ YEAR()
 GETDATE()
 FORMAT(date, "pattern")
 CONVERT(varchar(10), GETDATE(), 101); --101 это номер формата времени USA, 104 - немецкий
+TRY_CONVERT()
 PARSE('Friday, 20 July 2018' AS datetime2)
 datepart(week, '2019.01.12');
 
