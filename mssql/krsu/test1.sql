@@ -1,12 +1,11 @@
 use Boreas6;
 
 -- 1
-select convert(varchar, cast(avg(p.Цена) as money), 1) as [Ср. цена],
-  sum(p.НаСкладе * p.Цена) as [Запас]
+select t.Категория, convert(varchar, avg(p.Цена), 1) as 'Ср. цена',
+  sum(p.НаСкладе * p.Цена) as 'Запас'
 from Товары as p
   inner join Типы as t ON p.КодТипа = t.КодТипа
 group by t.Категория with rollup;
-
 
 
 -- 2
@@ -17,7 +16,7 @@ from Заказано as r
   inner join Заказы as rq on r.КодЗаказа = rq.КодЗаказа
   inner join Клиенты as cl on rq.Клиент_ID = cl.Клиент_Id
 group by cl.Клиент_Id, cl.Название
-having sum(r.Количество * (r.Цена - r.Цена * r.Скидка)) < (sum(r.Количество * r.Цена) * 90 / 100);
+having sum(r.Количество * (r.Цена - r.Цена * r.Скидка)) < (sum(r.Количество * r.Цена) * 90 / 100); -- где скидка > 10%
 
 
 
@@ -25,7 +24,7 @@ having sum(r.Количество * (r.Цена - r.Цена * r.Скидка)) 
 select e1.Фамилия, e1.Имя, e2.Фамилия, e2.Имя
 from Сотрудники as e1
   inner join Сотрудники as e2 on e1.Фамилия = e2.Фамилия 
-    and e1.КодСотрудника < e2.КодСотрудника
+    and e1.КодСотрудника < e2.КодСотрудника;
   
   
 
@@ -43,7 +42,7 @@ from Заказано as r
   inner join Типы as t on p.КодТипа = t.КодТипа
   inner join Заказы as rq on r.КодЗаказа = rq.КодЗаказа
   inner join Клиенты as cl on rq.Клиент_ID = cl.Клиент_Id
-group by t.Категория, cl.Клиент_Id,  cl.Название;
+group by t.Категория, cl.Клиент_Id, cl.Название;
 
 
 -- 2
