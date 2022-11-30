@@ -188,8 +188,8 @@ WHERE a.product_cd = 'CHK';
 -- У работника есть начальник (другой работник), ключ superior_emp_id является
 -- внешним ключом, который ссылается на эту же таблицу к первичному ключу, id работника.
 SELECT e.fname, e.lname, chief.fname chief_fname, chief.lname chief_lname
-FROM employee e 
-  INNER JOIN employee chief ON e.superior_emp_id = chief.emp_id;
+FROM employee AS e 
+  INNER JOIN employee AS chief ON e.superior_emp_id = chief.emp_id;;
 
 
 ---------------NO-EUIV-JOINS:
